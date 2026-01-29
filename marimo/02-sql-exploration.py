@@ -939,10 +939,27 @@ def _(mo):
 
 
 @app.cell
-def _(bundesliga, mo):
+def _():
     import plotly.express as px
+    return (px,)
 
+
+@app.cell
+def _(bundesliga, mo):
     # Schritt 1: Daten mit SQL abfragen
+    mo.sql(
+        f"""
+        SELECT Mannschaft, Punkte
+        FROM bundesliga
+        ORDER BY Punkte DESC
+        LIMIT 10
+        """
+    )
+
+
+@app.cell
+def _(bundesliga, mo, px):
+    # Schritt 2: Balkendiagramm erstellen
     top10 = mo.sql(
         f"""
         SELECT Mannschaft, Punkte
@@ -951,12 +968,7 @@ def _(bundesliga, mo):
         LIMIT 10
         """
     )
-    return px, top10
 
-
-@app.cell
-def _(px, top10):
-    # Schritt 2: Balkendiagramm erstellen
     fig = px.bar(
         top10.to_pandas(),
         x="Mannschaft",
@@ -981,8 +993,19 @@ def _(mo):
 
 
 @app.cell
-def _(bundesliga, mo, px):
+def _(bundesliga, mo):
     # SQL für alle Teams
+    mo.sql(
+        f"""
+        SELECT Mannschaft, ToreGeschossen, Punkte
+        FROM bundesliga
+        """
+    )
+
+
+@app.cell
+def _(bundesliga, mo, px):
+    # Streudiagramm
     alle_teams = mo.sql(
         f"""
         SELECT Mannschaft, ToreGeschossen, Punkte
@@ -990,7 +1013,6 @@ def _(bundesliga, mo, px):
         """
     )
 
-    # Streudiagramm
     fig2 = px.scatter(
         alle_teams.to_pandas(),
         x="ToreGeschossen",
@@ -1015,8 +1037,19 @@ def _(mo):
 
 
 @app.cell
+def _(bundesliga, mo):
+    # SQL-Abfrage
+    mo.sql(
+        f"""
+        SELECT Tordifferenz
+        FROM bundesliga
+        """
+    )
+
+
+@app.cell
 def _(bundesliga, mo, px):
-    # Ergänze die fehlenden Parameter
+    # Histogram erstellen
     tordiff = mo.sql(
         f"""
         SELECT Tordifferenz
@@ -1047,8 +1080,19 @@ def _(mo):
 
 
 @app.cell
+def _(bundesliga, mo):
+    # Deine SQL-Abfrage hier:
+    mo.sql(
+        f"""
+        SELECT Mannschaft, Siege, Niederlagen
+        FROM bundesliga
+        """
+    )
+
+
+@app.cell
 def _(bundesliga, mo, px):
-    # Deine Lösung hier:
+    # Visualisierung:
     siege_niederlagen = mo.sql(
         f"""
         SELECT Mannschaft, Siege, Niederlagen

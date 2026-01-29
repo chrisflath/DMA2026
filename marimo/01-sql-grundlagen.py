@@ -1014,10 +1014,26 @@ def _(mo):
 
 
 @app.cell
-def _(bundesliga, mo):
+def _():
     import plotly.express as px
+    return (px,)
 
+
+@app.cell
+def _(bundesliga, mo):
     # SQL liefert die Daten
+    mo.sql(
+        f"""
+        SELECT Mannschaft, Punkte
+        FROM bundesliga
+        WHERE Punkte > 50
+        """
+    )
+
+
+@app.cell
+def _(bundesliga, mo, px):
+    # Gleiche Abfrage für Visualisierung
     top_teams = mo.sql(
         f"""
         SELECT Mannschaft, Punkte
@@ -1025,11 +1041,7 @@ def _(bundesliga, mo):
         WHERE Punkte > 50
         """
     )
-    return px, top_teams
 
-
-@app.cell
-def _(px, top_teams):
     # Visualisierung: Balkendiagramm
     fig_bar = px.bar(
         top_teams.to_pandas(),
@@ -1040,7 +1052,6 @@ def _(px, top_teams):
         color_continuous_scale="Blues"
     )
     fig_bar
-    return (fig_bar,)
 
 
 @app.cell(hide_code=True)
@@ -1056,8 +1067,20 @@ def _(mo):
 
 
 @app.cell
-def _(bundesliga_spieltage, mo, px):
+def _(bundesliga_spieltage, mo):
     # SQL: Ein Team über alle Spieltage
+    mo.sql(
+        f"""
+        SELECT Spieltag, Punkte_Kumuliert
+        FROM bundesliga_spieltage
+        WHERE Mannschaft = 'Bayern München'
+        """
+    )
+
+
+@app.cell
+def _(bundesliga_spieltage, mo, px):
+    # Gleiche Abfrage für Visualisierung
     bayern_verlauf = mo.sql(
         f"""
         SELECT Spieltag, Punkte_Kumuliert
@@ -1075,7 +1098,6 @@ def _(bundesliga_spieltage, mo, px):
         markers=True
     )
     fig_line
-    return bayern_verlauf, fig_line
 
 
 @app.cell(hide_code=True)
@@ -1093,8 +1115,20 @@ def _(mo):
 
 
 @app.cell
-def _(bundesliga, bundesliga_spieltage, mo, px):
-    # Deine Lösung hier:
+def _(bundesliga, mo):
+    # Deine SQL-Abfrage hier:
+    mo.sql(
+        f"""
+        SELECT Mannschaft, ToreKassiert
+        FROM bundesliga
+        WHERE ToreKassiert > 60
+        """
+    )
+
+
+@app.cell
+def _(bundesliga, mo, px):
+    # Visualisierung:
     meine_daten = mo.sql(
         f"""
         SELECT Mannschaft, ToreKassiert
@@ -1105,7 +1139,6 @@ def _(bundesliga, bundesliga_spieltage, mo, px):
 
     fig_own = px.bar(meine_daten.to_pandas(), x="Mannschaft", y="ToreKassiert")
     fig_own
-    return fig_own, meine_daten
 
 
 @app.cell(hide_code=True)

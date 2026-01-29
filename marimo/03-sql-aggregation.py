@@ -328,7 +328,7 @@ def _(mo, spieler):
             Verein,
             COUNT(*) AS Nationalspieler,
             SUM(Tore) AS Tore_Gesamt,
-            AVG(Alter) AS Durchschnittsalter
+            AVG("Alter") AS Durchschnittsalter
         FROM spieler
         GROUP BY Verein
         ORDER BY Nationalspieler DESC
@@ -438,7 +438,7 @@ def _(mo, spieler):
         f"""
         SELECT Verein, COUNT(*) AS Junge_Spieler
         FROM spieler
-        WHERE Alter < 30
+        WHERE "Alter" < 30
         GROUP BY Verein
         HAVING COUNT(*) >= 2
         ORDER BY Junge_Spieler DESC
@@ -534,7 +534,7 @@ def _(bundesliga, mo, spieler):
     # Ihre eigene Abfrage hier:
     _df = mo.sql(
         f"""
-        SELECT Position, AVG(Alter) AS Durchschnittsalter
+        SELECT Position, AVG("Alter") AS Durchschnittsalter
         FROM spieler
         GROUP BY Position
         ORDER BY Durchschnittsalter

@@ -227,9 +227,9 @@ def _(mo, todesfaelle):
         f"""
         SELECT
             Arzt,
-            ROUND(AVG(Alter), 1) AS Durchschnittsalter,
-            MIN(Alter) AS Jüngster,
-            MAX(Alter) AS Ältester
+            ROUND(AVG("Alter"), 1) AS Durchschnittsalter,
+            MIN("Alter") AS Jüngster,
+            MAX("Alter") AS Ältester
         FROM todesfaelle
         GROUP BY Arzt
         """

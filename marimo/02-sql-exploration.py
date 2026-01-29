@@ -69,8 +69,8 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo, pl):
     # Load player data from CSV (with intentional NULL values for exercises)
-    csv_path = mo.notebook_location() / "public" / "spieler.csv"
-    spieler = pl.read_csv(str(csv_path))
+    spieler_path = mo.notebook_location() / "public" / "spieler.csv"
+    spieler = pl.read_csv(str(spieler_path))
 
     # Also load spieltage data for temporal analysis
     spieltage_path = mo.notebook_location() / "public" / "bundesliga_spieltage.csv"

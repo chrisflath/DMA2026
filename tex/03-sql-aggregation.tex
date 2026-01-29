@@ -1,0 +1,1736 @@
+% DMA Session 3: Aggregation & Gruppierung
+% 180-Minuten-Block (Vorlesung + Übung interwoven)
+
+\documentclass[usenames,dvipsnames,10pt,aspectratio=169]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+
+% Theme loaded via symlinks (update beamerTemplate/ for CD changes)
+\usetheme{ims}
+
+% ===== CLICKABLE AGENDA WITH PROGRESS INDICATOR =====
+\usepackage{hyperref}
+\hypersetup{colorlinks=false, pdfborder={0 0 0}}
+
+% Phase counter for progress tracking
+\newcounter{currentphase}
+\setcounter{currentphase}{0}
+
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, fit, backgrounds, matrix}
+\usepackage{pifont}
+
+% TikZ styles for diagrams
+\tikzset{
+    sqlbox/.style={rectangle, rounded corners, minimum width=2.5cm, minimum height=0.8cm,
+        text centered, draw=IMSBlue, fill=IMSBlue!15, font=\ttfamily\small},
+    sqlarrow/.style={-{Stealth[length=2.5mm]}, thick, IMSOrange},
+    databox/.style={rectangle, minimum width=1.2cm, minimum height=0.5cm,
+        text centered, draw=gray, fill=gray!10, font=\small},
+    groupbox/.style={rectangle, rounded corners, minimum width=2cm, minimum height=0.6cm,
+        align=center, draw=IMSOrange, fill=IMSOrange!15, font=\small},
+}
+
+% SQL Listing Style
+\lstdefinestyle{sql}{
+    language=SQL,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{IMSBlue}\bfseries,
+    stringstyle=\color{IMSOrange},
+    commentstyle=\color{gray}\itshape,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    morekeywords={SERIAL, BOOLEAN, TEXT, COALESCE, IFNULL, NULLIF, ISNULL, HAVING},
+    literate={ü}{{\"u}}1 {ä}{{\"a}}1 {ö}{{\"o}}1 {Ü}{{\"U}}1 {Ä}{{\"A}}1 {Ö}{{\"O}}1 {ß}{{\ss}}1
+}
+
+\lstset{style=sql}
+
+% Clickable agenda item
+\newcommand{\agendaitem}[3]{%
+    \ifnum#1=#2
+        \textcolor{IMSOrange}{$\blacktriangleright$ \textbf{\hyperlink{phase#2}{#3}}}%
+    \else
+        \textcolor{gray!70}{\phantom{$\blacktriangleright$} \hyperlink{phase#2}{#3}}%
+    \fi\\[0.3em]%
+}
+
+% Progress dots for footline (clickable)
+\newcommand{\progressdots}{%
+    \begin{tikzpicture}[baseline=-0.5ex]
+        \foreach \i in {1,...,7} {
+            \ifnum\value{currentphase}=\i
+                \node[circle, fill=IMSOrange, minimum size=0.24cm, inner sep=0pt] at (\i*0.4,0) {\hyperlink{phase\i}{\phantom{oo}}};
+            \else
+                \ifnum\value{currentphase}>\i
+                    \node[circle, fill=IMSBlue!60, minimum size=0.2cm, inner sep=0pt] at (\i*0.4,0) {\hyperlink{phase\i}{\phantom{oo}}};
+                \else
+                    \node[circle, draw=gray!50, minimum size=0.2cm, inner sep=0pt] at (\i*0.4,0) {\hyperlink{phase\i}{\phantom{oo}}};
+                \fi
+            \fi
+        }
+    \end{tikzpicture}%
+}
+
+% Add progress indicator to footline
+\setbeamertemplate{footline}{%
+    \leavevmode%
+    \hbox{%
+        \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,left]{author in head/foot}%
+            \usebeamerfont{author in head/foot}\hspace*{2ex}\insertshortauthor
+        \end{beamercolorbox}%
+        \begin{beamercolorbox}[wd=.34\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}%
+            \progressdots
+        \end{beamercolorbox}%
+        \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,right]{date in head/foot}%
+            \usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+        \end{beamercolorbox}%
+    }%
+    \vskip0pt%
+}
+
+% Agenda reminder frame - argument is the current phase number
+\newcommand{\showagenda}[1]{%
+\setcounter{currentphase}{#1}%
+\hypertarget{phase#1}{}%
+\begin{frame}{Agenda}
+\vfill
+\begin{center}
+\begin{minipage}{0.55\textwidth}
+\large
+\agendaitem{#1}{1}{1 ~ Rückblick \& Aggregatfunktionen}
+\agendaitem{#1}{3}{2 ~ GROUP BY: Daten gruppieren}
+\agendaitem{#1}{5}{3 ~ HAVING \& Vertiefung}
+\agendaitem{#1}{6}{4 ~ Visualisierung: Aggregierte Daten}
+\agendaitem{#1}{7}{5 ~ Zusammenfassung}
+\end{minipage}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title[DMA 03]{Datenmanagement \& -analyse}
+\subtitle{Vorlesung 3: Aggregation \& Gruppierung}
+\date{Sommersemester 2026}
+\author{Prof. Dr. Christoph M. Flath}
+\institute{Data Driven Decisions Group, Universität Würzburg}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Agenda}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Agenda}
+\vfill
+\begin{center}
+\begin{minipage}{0.55\textwidth}
+\large
+1 ~ Rückblick \& Aggregatfunktionen\\[0.3em]
+2 ~ GROUP BY: Daten gruppieren\\[0.3em]
+3 ~ HAVING \& Vertiefung\\[0.3em]
+4 ~ Visualisierung: Aggregierte Daten\\[0.3em]
+5 ~ Zusammenfassung\\[0.3em]
+\end{minipage}
+\end{center}
+\vfill
+\begin{alertblock}{Lernziele}
+Daten aggregieren, gruppieren und zusammenfassende Statistiken berechnen.
+\end{alertblock}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Phase 1: Rückblick \& Aggregatfunktionen}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\showagenda{1}
+
+\begin{frame}{Rückblick: SQL-Bausteine}
+
+\begin{tikzpicture}[node distance=0.4cm]
+    \node[sqlbox] (select) {SELECT};
+    \node[sqlbox, right=of select] (from) {FROM};
+    \node[sqlbox, right=of from] (where) {WHERE};
+    \node[sqlbox, right=of where] (order) {ORDER BY};
+    \node[sqlbox, right=of order] (limit) {LIMIT};
+    \draw[sqlarrow] (select) -- (from);
+    \draw[sqlarrow] (from) -- (where);
+    \draw[sqlarrow] (where) -- (order);
+    \draw[sqlarrow] (order) -- (limit);
+\end{tikzpicture}
+
+\vspace{0.5cm}
+
+\begin{itemize}
+    \item \texttt{SELECT} / \texttt{DISTINCT} -- Spalten wählen
+    \item \texttt{WHERE} -- Zeilen filtern
+    \item \texttt{ORDER BY} / \texttt{LIMIT} -- Sortieren \& Begrenzen
+    \item \texttt{IS NULL} / \texttt{COALESCE} -- Fehlende Werte
+\end{itemize}
+
+\vspace{0.3cm}
+
+\begin{block}{Heute: Von Einzelwerten zu Zusammenfassungen}
+Wie viele Teams gibt es? Was ist die durchschnittliche Punktzahl? Welches Team hat die meisten Tore?
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Die fünf Aggregatfunktionen}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9, transform shape]
+    \node[groupbox, minimum width=2.8cm, minimum height=1.1cm] (count) at (0,0) {\textbf{COUNT}\\Anzahl};
+    \node[groupbox, minimum width=2.8cm, minimum height=1.1cm] (sum) at (3.5,0) {\textbf{SUM}\\Summe};
+    \node[groupbox, minimum width=2.8cm, minimum height=1.1cm] (avg) at (7,0) {\textbf{AVG}\\Durchschnitt};
+    \node[groupbox, minimum width=2.8cm, minimum height=1.1cm] (min) at (1.75,-1.8) {\textbf{MIN}\\Minimum};
+    \node[groupbox, minimum width=2.8cm, minimum height=1.1cm] (max) at (5.25,-1.8) {\textbf{MAX}\\Maximum};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{alertblock}{Wichtig}
+Aggregatfunktionen fassen \textbf{viele Zeilen} zu \textbf{einem Wert} zusammen.
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{COUNT: Zeilen zählen}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Alle Zeilen zählen:}
+\begin{lstlisting}
+SELECT COUNT(*)
+FROM bundesliga;
+\end{lstlisting}
+{\small $\rightarrow$ 18 (alle Teams)}
+
+\vspace{0.5cm}
+
+\textbf{Nicht-NULL Werte zählen:}
+\begin{lstlisting}
+SELECT COUNT(Spitzname)
+FROM spieler;
+\end{lstlisting}
+{\small $\rightarrow$ 6 (nur Spieler mit Spitzname)}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Eindeutige Werte zählen:}
+\begin{lstlisting}
+SELECT COUNT(DISTINCT Position)
+FROM spieler;
+\end{lstlisting}
+{\small $\rightarrow$ 4 (Tor, Abwehr, Mittelfeld, Sturm)}
+
+\vspace{0.5cm}
+
+\begin{exampleblock}{Merke}
+\texttt{COUNT(*)} zählt alle Zeilen\\
+\texttt{COUNT(spalte)} ignoriert NULL
+\end{exampleblock}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{SUM \& AVG: Summe und Durchschnitt}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Summe:}
+\begin{lstlisting}
+SELECT SUM(Punkte)
+FROM bundesliga;
+\end{lstlisting}
+{\small $\rightarrow$ Gesamtpunkte aller Teams}
+
+\vspace{0.3cm}
+
+\begin{lstlisting}
+SELECT SUM(ToreGeschossen)
+FROM bundesliga;
+\end{lstlisting}
+{\small $\rightarrow$ Alle Tore der Saison}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Durchschnitt:}
+\begin{lstlisting}
+SELECT AVG(Punkte)
+FROM bundesliga;
+\end{lstlisting}
+{\small $\rightarrow$ Durchschnittliche Punktzahl}
+
+\vspace{0.3cm}
+
+\begin{lstlisting}
+SELECT AVG(Tordifferenz)
+FROM bundesliga;
+\end{lstlisting}
+{\small $\rightarrow$ ca. 0 (Nullsummenspiel!)}
+\end{column}
+\end{columns}
+
+\vspace{0.5cm}
+
+\begin{alertblock}{Achtung bei NULL}
+\texttt{AVG} ignoriert NULL-Werte! Das kann den Durchschnitt verfälschen.
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{MIN \& MAX: Extremwerte}
+
+\begin{lstlisting}
+SELECT
+    MIN(Punkte) AS Wenigste_Punkte,
+    MAX(Punkte) AS Meiste_Punkte,
+    MAX(Punkte) - MIN(Punkte) AS Spannweite
+FROM bundesliga;
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+\begin{center}
+\begin{tabular}{rrr}
+\toprule
+\textbf{Wenigste\_Punkte} & \textbf{Meiste\_Punkte} & \textbf{Spannweite} \\
+\midrule
+12 & 50 & 38 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{exampleblock}{Auch für Text}
+\texttt{MIN}/\texttt{MAX} funktionieren auch alphabetisch:\\
+\texttt{MIN(Mannschaft)} $\rightarrow$ '1. FC Heidenheim' (alphabetisch erstes)
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{Mehrere Aggregationen kombinieren}
+
+\begin{lstlisting}
+SELECT
+    COUNT(*) AS Anzahl_Teams,
+    SUM(Siege) AS Gesamtsiege,
+    AVG(Punkte) AS Schnitt_Punkte,
+    MIN(Tordifferenz) AS Schlechteste_Diff,
+    MAX(Tordifferenz) AS Beste_Diff
+FROM bundesliga;
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+\begin{center}
+\small
+\begin{tabular}{rrrrr}
+\toprule
+\textbf{Teams} & \textbf{Siege} & \textbf{Schnitt} & \textbf{Min Diff} & \textbf{Max Diff} \\
+\midrule
+18 & 127 & 26.3 & -27 & +56 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{block}{Eine Zeile, viele Informationen}
+Alle Aggregatfunktionen in einem SELECT liefern \textbf{eine Ergebniszeile}.
+\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{NULL-Werte in Aggregationen}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{COUNT und NULL:}
+\begin{lstlisting}
+SELECT
+    COUNT(*) AS Alle,
+    COUNT(Tore) AS Mit_Toren
+FROM spieler;
+\end{lstlisting}
+
+\begin{center}
+\small
+\begin{tabular}{rr}
+\toprule
+\textbf{Alle} & \textbf{Mit\_Toren} \\
+\midrule
+12 & 10 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{AVG und NULL:}
+\begin{lstlisting}
+-- NULL wird ignoriert!
+SELECT AVG(Tore)
+FROM spieler;
+\end{lstlisting}
+{\small Berechnet: $(8+0+3+5+...)/10$\\
+Nicht: $(8+0+3+5+...)/12$}
+\end{column}
+\end{columns}
+
+\vspace{0.5cm}
+
+\begin{alertblock}{Wichtig}
+\texttt{AVG}, \texttt{SUM}, \texttt{MIN}, \texttt{MAX} ignorieren NULL-Werte komplett!\\
+Das kann den Durchschnitt verfälschen, wenn NULL eigentlich 0 bedeutet.
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{NULL-Werte behandeln mit COALESCE}
+
+\begin{lstlisting}
+-- NULL als 0 behandeln
+SELECT
+    AVG(Tore) AS Schnitt_ohne_NULL,
+    AVG(COALESCE(Tore, 0)) AS Schnitt_mit_NULL_als_0
+FROM spieler;
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+\begin{center}
+\begin{tabular}{rr}
+\toprule
+\textbf{Ohne NULL} & \textbf{Mit NULL als 0} \\
+\midrule
+5.7 & 4.75 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{exampleblock}{Wann COALESCE verwenden?}
+\begin{itemize}
+    \item Wenn NULL semantisch "0" bedeutet (z.B. keine Tore = 0 Tore)
+    \item Wenn alle Zeilen in die Berechnung einfließen sollen
+\end{itemize}
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}{Vorhersage: Was ist das Ergebnis?}
+
+\begin{block}{Frage 1}
+\texttt{SELECT COUNT(*) FROM bundesliga WHERE Punkte > 100}
+\end{block}
+
+\pause
+
+{\color{IMSOrange} Antwort: 0 (kein Team hat mehr als 100 Punkte)}
+
+\vspace{0.5cm}
+
+\begin{block}{Frage 2}
+\texttt{SELECT AVG(Tordifferenz) FROM bundesliga}
+\end{block}
+
+\pause
+
+{\color{IMSOrange} Antwort: ca. 0 (Nullsummenspiel -- alle Tore sind auch Gegentore!)}
+
+\vspace{0.5cm}
+
+\begin{block}{Frage 3}
+\texttt{SELECT SUM(Siege) + SUM(Niederlagen) + SUM(Unentschieden) FROM bundesliga}
+\end{block}
+
+\pause
+
+{\color{IMSOrange} Antwort: 18 $\times$ 19 = 342 (Gesamtzahl aller Spiele $\times$ 2)}
+
+\end{frame}
+
+\begin{frame}[fragile]{Häufige Fehler bei Aggregationen}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Fehler 1: Mischen}
+\begin{lstlisting}
+-- FALSCH!
+SELECT Mannschaft, AVG(Punkte)
+FROM bundesliga;
+\end{lstlisting}
+{\small\color{red} Mannschaft ist nicht aggregiert!}
+
+\vspace{0.5cm}
+
+\textbf{Fehler 2: WHERE statt HAVING}
+\begin{lstlisting}
+-- FALSCH!
+SELECT Position, AVG(Tore)
+FROM spieler
+WHERE AVG(Tore) > 5
+GROUP BY Position;
+\end{lstlisting}
+{\small\color{red} AVG existiert noch nicht bei WHERE!}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Richtig:}
+\begin{lstlisting}
+SELECT AVG(Punkte)
+FROM bundesliga;
+\end{lstlisting}
+{\small\color{green!50!black} Nur Aggregat, keine Einzelspalten}
+
+\vspace{0.5cm}
+
+\textbf{Richtig:}
+\begin{lstlisting}
+SELECT Position, AVG(Tore)
+FROM spieler
+GROUP BY Position
+HAVING AVG(Tore) > 5;
+\end{lstlisting}
+{\small\color{green!50!black} HAVING für Aggregat-Filter}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{Aggregation mit WHERE-Filter}
+
+\begin{lstlisting}
+-- Nur Teams mit positiver Tordifferenz
+SELECT
+    COUNT(*) AS Anzahl,
+    AVG(Punkte) AS Schnitt
+FROM bundesliga
+WHERE Tordifferenz > 0;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\begin{tabular}{rr}
+\toprule
+\textbf{Anzahl} & \textbf{Schnitt} \\
+\midrule
+9 & 34.2 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{block}{Ablauf}
+\begin{enumerate}
+    \item \texttt{WHERE} filtert auf 9 Teams mit positiver Tordifferenz
+    \item \texttt{COUNT} und \texttt{AVG} werden nur für diese 9 berechnet
+\end{enumerate}
+\end{block}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HANDS-ON Phase 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{
+\setbeamercolor{background canvas}{bg=IMSOrange!15}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge\color{IMSOrange} Hands-on}\\[1em]
+{\Large Erste Aggregationen}\\[2em]
+{\large\ttfamily marimo: 03-sql-aggregation.py}\\[1em]
+{\normalsize Aufgaben 2.1 -- 2.4}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Phase 3: GROUP BY}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\showagenda{3}
+
+\begin{frame}{Das Problem: Aggregation pro Gruppe}
+
+\begin{block}{Frage}
+Wie viele Tore hat jede \textbf{Position} im Durchschnitt?
+\end{block}
+
+\vspace{0.5cm}
+
+\textbf{Bisher:} Eine Aggregation über \textbf{alle} Daten.
+
+\vspace{0.3cm}
+
+\textbf{Jetzt:} Eine Aggregation \textbf{pro Gruppe}.
+
+\vspace{0.5cm}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85, transform shape]
+    % Left side: all data
+    \node[font=\small\bfseries] at (-2,2) {Alle Daten};
+    \foreach \y/\pos in {1.5/Sturm, 1/Mittelfeld, 0.5/Sturm, 0/Abwehr, -0.5/Mittelfeld, -1/Tor} {
+        \node[databox, minimum width=2cm] at (-2,\y) {\pos};
+    }
+
+    % Arrow
+    \draw[-{Stealth}, thick, IMSOrange] (0,0.5) -- (2,0.5) node[midway, above, font=\small] {GROUP BY};
+
+    % Right side: groups (aligned vertically for clarity)
+    \node[font=\small\bfseries] at (5,2) {Gruppen};
+    \node[groupbox] at (5,1.2) {Sturm (2)};
+    \node[groupbox] at (5,0.4) {Mittelfeld (2)};
+    \node[groupbox] at (5,-0.4) {Abwehr (1)};
+    \node[groupbox] at (5,-1.2) {Tor (1)};
+\end{tikzpicture}
+\end{center}
+
+\end{frame}
+
+\begin{frame}[fragile]{GROUP BY: Syntax}
+
+\begin{block}{Syntax}
+\begin{lstlisting}
+SELECT gruppe, AGGREGAT(spalte)
+FROM tabelle
+GROUP BY gruppe;
+\end{lstlisting}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{lstlisting}
+SELECT Position, AVG(Tore) AS Schnitt_Tore
+FROM spieler
+GROUP BY Position;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Position} & \textbf{Schnitt\_Tore} \\
+\midrule
+Abwehr & 1.0 \\
+Mittelfeld & 8.3 \\
+Sturm & 8.0 \\
+Tor & 0.0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{frame}
+
+\begin{frame}[fragile]{GROUP BY: Wie es funktioniert}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.75, transform shape]
+    % Step 1: Original data
+    \node[font=\bfseries] at (0,3.5) {1. Originaldaten};
+    \matrix[matrix of nodes, nodes={databox, minimum width=1.4cm, minimum height=0.4cm},
+            row sep=1pt, column sep=1pt] at (0,1.5) {
+        Müller & Sturm & 8 \\
+        Neuer & Tor & 0 \\
+        Sané & Sturm & 5 \\
+        Musiala & Mittelfeld & 12 \\
+        Kimmich & Mittelfeld & 3 \\
+    };
+
+    % Arrow 1
+    \draw[-{Stealth}, thick, IMSOrange] (2.3,1.5) -- (3.7,1.5);
+
+    % Step 2: Grouped
+    \node[font=\bfseries] at (6,3.5) {2. Gruppiert};
+    \node[groupbox, fill=blue!15] at (6,2.3) {Sturm: 8, 5};
+    \node[groupbox, fill=green!15] at (6,1.5) {Mittelfeld: 12, 3};
+    \node[groupbox, fill=yellow!15] at (6,0.7) {Tor: 0};
+
+    % Arrow 2
+    \draw[-{Stealth}, thick, IMSOrange] (8.3,1.5) -- (9.7,1.5);
+
+    % Step 3: Aggregated
+    \node[font=\bfseries] at (12,3.5) {3. Aggregiert};
+    \node[groupbox, fill=blue!15] at (12,2.3) {Sturm: 6.5};
+    \node[groupbox, fill=green!15] at (12,1.5) {Mittelfeld: 7.5};
+    \node[groupbox, fill=yellow!15] at (12,0.7) {Tor: 0};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{alertblock}{Die goldene Regel}
+Im \texttt{SELECT} dürfen nur stehen:\\
+1. Spalten aus \texttt{GROUP BY}\\
+2. Aggregatfunktionen
+\end{alertblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{Die goldene Regel: Beispiel}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Falsch:}
+\begin{lstlisting}
+SELECT Position, Name, AVG(Tore)
+FROM spieler
+GROUP BY Position;
+\end{lstlisting}
+{\small\color{red} Fehler! Welcher Name soll angezeigt werden?}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Richtig:}
+\begin{lstlisting}
+SELECT Position, AVG(Tore)
+FROM spieler
+GROUP BY Position;
+\end{lstlisting}
+{\small\color{green!50!black} OK! Position ist in GROUP BY.}
+\end{column}
+\end{columns}
+
+\vspace{0.5cm}
+
+\begin{exampleblock}{Gedankenexperiment}
+Wenn wir nach Position gruppieren und es 3 Stürmer gibt -- welcher Name sollte angezeigt werden? Müller? Sané? Füllkrug?\\[0.3em]
+$\rightarrow$ \textbf{Nicht eindeutig}, deshalb verboten!
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{GROUP BY mit mehreren Spalten}
+
+\begin{lstlisting}
+SELECT Position, Verein, COUNT(*) AS Anzahl
+FROM spieler
+WHERE Verein IS NOT NULL
+GROUP BY Position, Verein;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\small
+\begin{tabular}{llr}
+\toprule
+\textbf{Position} & \textbf{Verein} & \textbf{Anzahl} \\
+\midrule
+Abwehr & Bayer Leverkusen & 1 \\
+Abwehr & Borussia Dortmund & 1 \\
+Mittelfeld & Bayern München & 2 \\
+Sturm & Bayern München & 2 \\
+... & ... & ... \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{block}{Kombinations-Gruppen}
+Jede \textbf{Kombination} aus Position und Verein bildet eine eigene Gruppe.
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Vorhersage: GROUP BY Ergebnisse}
+
+\begin{block}{Frage 1: Wie viele Zeilen?}
+\begin{ttfamily}
+\small
+SELECT Position, COUNT(*) FROM spieler GROUP BY Position;
+\end{ttfamily}
+\end{block}
+
+\pause
+
+{\color{IMSOrange} Antwort: 4 Zeilen (Tor, Abwehr, Mittelfeld, Sturm)}
+
+\vspace{0.5cm}
+
+\begin{block}{Frage 2: Wie viele Zeilen?}
+\begin{ttfamily}
+\small
+SELECT Spiele, COUNT(*) FROM bundesliga GROUP BY Spiele;
+\end{ttfamily}
+\end{block}
+
+\pause
+
+{\color{IMSOrange} Antwort: 2 Zeilen (Teams mit 18 Spielen, Teams mit 19 Spielen)}
+
+\vspace{0.5cm}
+
+\begin{exampleblock}{Merke}
+Anzahl der Ergebniszeilen = Anzahl der \textbf{unterschiedlichen Werte} in der GROUP BY Spalte
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{GROUP BY: Leistungsanalyse der Bundesliga}
+
+\textbf{Frage:} Wie unterscheidet sich die Effizienz der Teams nach Tabellenbereich?
+
+\begin{lstlisting}
+SELECT
+    CASE
+        WHEN Punkte >= 45 THEN 'Spitze'
+        WHEN Punkte >= 30 THEN 'Mittelfeld'
+        WHEN Punkte >= 20 THEN 'Abstiegskampf'
+        ELSE 'Abstiegszone'
+    END AS Tabellenbereich,
+    COUNT(*) AS Teams,
+    ROUND(AVG(ToreGeschossen * 1.0 / Spiele), 2) AS Tore_pro_Spiel,
+    ROUND(AVG(ToreKassiert * 1.0 / Spiele), 2) AS Gegentore_pro_Spiel
+FROM bundesliga
+GROUP BY Tabellenbereich
+ORDER BY Tore_pro_Spiel DESC;
+\end{lstlisting}
+
+\begin{exampleblock}{Erkenntnis}
+Spitzenteams schießen mehr Tore UND kassieren weniger -- doppelter Vorteil!
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{GROUP BY mit ORDER BY}
+
+\begin{lstlisting}
+SELECT Position, AVG(Tore) AS Schnitt
+FROM spieler
+GROUP BY Position
+ORDER BY Schnitt DESC;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+\textbf{Position} & \textbf{Schnitt} \\
+\midrule
+Mittelfeld & 8.3 \\
+Sturm & 8.0 \\
+Abwehr & 1.0 \\
+Tor & 0.0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{block}{Sortierung nach Aggregat}
+Mit \texttt{ORDER BY} können Sie die Gruppen nach dem berechneten Aggregat sortieren -- z.B. um die "Top"-Gruppen zu finden.
+\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{Praxisbeispiel: Bundesliga-Analyse}
+
+\textbf{Frage:} Wie viele Teams haben eine positive/negative/neutrale Tordifferenz?
+
+\begin{lstlisting}
+SELECT
+    CASE
+        WHEN Tordifferenz > 0 THEN 'Positiv'
+        WHEN Tordifferenz < 0 THEN 'Negativ'
+        ELSE 'Neutral'
+    END AS Kategorie,
+    COUNT(*) AS Anzahl,
+    AVG(Punkte) AS Schnitt_Punkte
+FROM bundesliga
+GROUP BY Kategorie
+ORDER BY Schnitt_Punkte DESC;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{exampleblock}{Erkenntnisse}
+Teams mit positiver Tordifferenz haben im Schnitt deutlich mehr Punkte -- Tore schießen korreliert mit Erfolg!
+\end{exampleblock}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HANDS-ON Phase 4
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{
+\setbeamercolor{background canvas}{bg=IMSOrange!15}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge\color{IMSOrange} Hands-on}\\[1em]
+{\Large Gruppierung in der Praxis}\\[2em]
+{\large\ttfamily marimo: 03-sql-aggregation.py}\\[1em]
+{\normalsize Aufgaben 4.1 -- 4.4}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PAUSE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{
+\setbeamercolor{background canvas}{bg=gray!20}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge Pause}\\[1em]
+{\Large 15 Minuten}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Phase 5: HAVING}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\showagenda{5}
+
+\begin{frame}{WHERE vs. HAVING: Das Problem}
+
+\begin{block}{Frage}
+Welche Positionen haben \textbf{im Durchschnitt mehr als 5 Tore}?
+\end{block}
+
+\vspace{0.5cm}
+
+\textbf{Erster Versuch (falsch):}
+
+\vspace{0.3cm}
+
+\texttt{WHERE AVG(Tore) > 5} \quad {\color{red}\ding{55}}
+
+\vspace{0.5cm}
+
+\begin{alertblock}{Problem}
+\texttt{WHERE} filtert \textbf{einzelne Zeilen} -- aber \texttt{AVG(Tore)} existiert erst \textbf{nach} der Gruppierung!
+\end{alertblock}
+
+\vspace{0.3cm}
+
+$\rightarrow$ Wir brauchen einen Filter, der \textbf{nach} GROUP BY wirkt.
+
+\end{frame}
+
+\begin{frame}[fragile]{HAVING: Filter auf Gruppen}
+
+\begin{block}{Syntax}
+\begin{lstlisting}
+SELECT gruppe, AGGREGAT(spalte)
+FROM tabelle
+GROUP BY gruppe
+HAVING AGGREGAT(spalte) bedingung;
+\end{lstlisting}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{lstlisting}
+SELECT Position, AVG(Tore) AS Schnitt
+FROM spieler
+GROUP BY Position
+HAVING AVG(Tore) > 5;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\small
+\begin{tabular}{lr}
+\toprule
+\textbf{Position} & \textbf{Schnitt} \\
+\midrule
+Mittelfeld & 8.3 \\
+Sturm & 8.0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+{\small Abwehr (1.0) und Tor (0.0) wurden herausgefiltert.}
+
+\end{frame}
+
+\begin{frame}[fragile]{WHERE vs. HAVING: Der Unterschied}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{WHERE} filtert \textbf{Zeilen}\\
+{\small (vor der Gruppierung)}
+
+\begin{lstlisting}
+SELECT Position, AVG(Tore)
+FROM spieler
+WHERE Tore > 0
+GROUP BY Position;
+\end{lstlisting}
+
+{\small Nur Spieler mit Toren werden gruppiert.}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{HAVING} filtert \textbf{Gruppen}\\
+{\small (nach der Gruppierung)}
+
+\begin{lstlisting}
+SELECT Position, AVG(Tore)
+FROM spieler
+GROUP BY Position
+HAVING AVG(Tore) > 5;
+\end{lstlisting}
+
+{\small Nur Gruppen mit hohem Schnitt werden angezeigt.}
+\end{column}
+\end{columns}
+
+\vspace{0.5cm}
+
+\begin{exampleblock}{Merkregel}
+\textbf{WHERE} = Filter auf \textbf{Rohdaten} (einzelne Zeilen)\\
+\textbf{HAVING} = Filter auf \textbf{Aggregate} (Gruppen-Ergebnisse)
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}{SQL-Ausführungsreihenfolge (erweitert)}
+
+\begin{center}
+\begin{tikzpicture}[node distance=0.35cm]
+    \node[sqlbox, minimum width=4cm] (from) {1. FROM};
+    \node[sqlbox, minimum width=4cm, below=of from] (where) {2. WHERE};
+    \node[sqlbox, minimum width=4cm, below=of where, fill=IMSOrange!20, draw=IMSOrange] (group) {3. GROUP BY};
+    \node[sqlbox, minimum width=4cm, below=of group, fill=IMSOrange!20, draw=IMSOrange] (having) {4. HAVING};
+    \node[sqlbox, minimum width=4cm, below=of having] (select) {5. SELECT};
+    \node[sqlbox, minimum width=4cm, below=of select] (order) {6. ORDER BY};
+
+    \draw[sqlarrow] (from) -- (where);
+    \draw[sqlarrow] (where) -- (group);
+    \draw[sqlarrow] (group) -- (having);
+    \draw[sqlarrow] (having) -- (select);
+    \draw[sqlarrow] (select) -- (order);
+
+    \node[right=0.6cm of from, font=\small\color{gray}] {Tabelle laden};
+    \node[right=0.6cm of where, font=\small\color{gray}] {Zeilen filtern};
+    \node[right=0.6cm of group, font=\small\color{IMSOrange}] {Gruppen bilden};
+    \node[right=0.6cm of having, font=\small\color{IMSOrange}] {Gruppen filtern};
+    \node[right=0.6cm of select, font=\small\color{gray}] {Spalten/Aggregate};
+    \node[right=0.6cm of order, font=\small\color{gray}] {Sortieren};
+\end{tikzpicture}
+\end{center}
+
+\end{frame}
+
+\begin{frame}[fragile]{WHERE und HAVING kombinieren}
+
+\begin{lstlisting}
+SELECT Position, COUNT(*) AS Anzahl, AVG(Tore) AS Schnitt
+FROM spieler
+WHERE Verein IS NOT NULL      -- Nur Spieler mit Verein
+GROUP BY Position
+HAVING COUNT(*) >= 2          -- Nur Positionen mit 2+ Spielern
+ORDER BY Schnitt DESC;
+\end{lstlisting}
+
+\vspace{0.5cm}
+
+\textbf{Reihenfolge der Ausführung:}
+\begin{enumerate}
+    \item \texttt{FROM spieler} -- Alle 12 Spieler
+    \item \texttt{WHERE Verein IS NOT NULL} -- 11 Spieler bleiben
+    \item \texttt{GROUP BY Position} -- 4 Gruppen
+    \item \texttt{HAVING COUNT(*) >= 2} -- 3 Gruppen bleiben
+    \item \texttt{SELECT ...} -- Ergebnis berechnen
+    \item \texttt{ORDER BY Schnitt DESC} -- Sortieren
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}[fragile]{Typische Analysefragen mit GROUP BY}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Top-N pro Gruppe:}
+\begin{lstlisting}
+-- Beste Tordifferenz
+-- pro Spielanzahl
+SELECT Spiele,
+       MAX(Tordifferenz)
+FROM bundesliga
+GROUP BY Spiele;
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Verteilung analysieren:}
+\begin{lstlisting}
+-- Wie viele Teams
+-- pro Punktebereich?
+SELECT
+  CASE
+    WHEN Punkte >= 40 THEN 'Top'
+    WHEN Punkte >= 20 THEN 'Mitte'
+    ELSE 'Abstieg'
+  END AS Bereich,
+  COUNT(*)
+FROM bundesliga
+GROUP BY Bereich;
+\end{lstlisting}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{HAVING mit mehreren Bedingungen}
+
+\begin{lstlisting}
+SELECT Position,
+       COUNT(*) AS Anzahl,
+       AVG(Tore) AS Schnitt,
+       SUM(Vorlagen) AS Gesamt_Vorlagen
+FROM spieler
+GROUP BY Position
+HAVING COUNT(*) >= 2
+   AND AVG(Tore) > 3;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Position} & \textbf{Anzahl} & \textbf{Schnitt} & \textbf{Vorlagen} \\
+\midrule
+Mittelfeld & 4 & 8.3 & 26 \\
+Sturm & 4 & 8.0 & 14 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{block}{Kombinierte Filter}
+HAVING kann mehrere Bedingungen mit \texttt{AND}/\texttt{OR} kombinieren.
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Vorhersage: WHERE vs HAVING}
+
+\textbf{Welche Abfrage ist korrekt?}
+
+\vspace{0.5cm}
+
+\begin{block}{Aufgabe: Positionen mit mehr als 3 Spielern finden}
+A) \texttt{... WHERE COUNT(*) > 3 GROUP BY Position}\\
+B) \texttt{... GROUP BY Position HAVING COUNT(*) > 3}
+\end{block}
+
+\pause
+
+{\color{IMSOrange} Antwort: B -- COUNT ist ein Aggregat, braucht HAVING}
+
+\vspace{0.5cm}
+
+\begin{block}{Aufgabe: Nur Spieler mit Verein gruppieren}
+A) \texttt{... WHERE Verein IS NOT NULL GROUP BY Position}\\
+B) \texttt{... GROUP BY Position HAVING Verein IS NOT NULL}
+\end{block}
+
+\pause
+
+{\color{IMSOrange} Antwort: A -- Verein ist eine Zeilen-Eigenschaft, braucht WHERE}
+
+\end{frame}
+
+\begin{frame}{Quiz: HAVING in der Praxis}
+
+\textbf{Bestimme für jede Aufgabe: WHERE, HAVING oder beides?}
+
+\vspace{0.5cm}
+
+\begin{tabular}{p{7cm}c}
+\toprule
+\textbf{Aufgabe} & \textbf{Antwort} \\
+\midrule
+Nur Teams mit mehr als 40 Punkten & ??? \\
+\pause
+& WHERE \\
+\midrule
+Nur Positionen mit Torschnitt > 5 & ??? \\
+\pause
+& HAVING \\
+\midrule
+Bayern-Spieler, gruppiert nach Position,\\nur Positionen mit mind. 2 Spielern & ??? \\
+\pause
+& Beides! \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5cm}
+
+\begin{exampleblock}{Merkregel}
+\textbf{WHERE} = Einzelne Zeilen ausschließen \textit{bevor} gruppiert wird\\
+\textbf{HAVING} = Ganze Gruppen ausschließen \textit{nachdem} aggregiert wurde
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{Debugging: Finden Sie den Fehler}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Abfrage 1:}
+\begin{lstlisting}
+SELECT Position, Name,
+       AVG(Tore)
+FROM spieler
+GROUP BY Position;
+\end{lstlisting}
+
+\pause
+
+{\small\color{red} Fehler: \texttt{Name} nicht in GROUP BY und nicht aggregiert}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Abfrage 2:}
+\begin{lstlisting}
+SELECT Position, AVG(Tore)
+FROM spieler
+WHERE AVG(Tore) > 5
+GROUP BY Position;
+\end{lstlisting}
+
+\pause
+
+{\small\color{red} Fehler: \texttt{AVG} in WHERE statt HAVING}
+\end{column}
+\end{columns}
+
+\vspace{0.5cm}
+
+\pause
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Korrigiert:}
+\begin{lstlisting}
+SELECT Position, AVG(Tore)
+FROM spieler
+GROUP BY Position;
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{Korrigiert:}
+\begin{lstlisting}
+SELECT Position, AVG(Tore)
+FROM spieler
+GROUP BY Position
+HAVING AVG(Tore) > 5;
+\end{lstlisting}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{Fortgeschritten: Aggregat in ORDER BY}
+
+\begin{lstlisting}
+SELECT Verein, COUNT(*) AS Spieleranzahl
+FROM spieler
+WHERE Verein IS NOT NULL
+GROUP BY Verein
+ORDER BY COUNT(*) DESC
+LIMIT 3;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+\textbf{Verein} & \textbf{Spieleranzahl} \\
+\midrule
+Bayern München & 5 \\
+Bayer Leverkusen & 2 \\
+... & ... \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{exampleblock}{Top-N Analyse}
+Mit \texttt{ORDER BY aggregat DESC LIMIT n} finden Sie die "Top n" Gruppen.
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}[fragile]{Anwendungsfall: Statistische Kennzahlen}
+
+\begin{lstlisting}
+SELECT
+    'Bundesliga' AS Liga,
+    COUNT(*) AS Teams,
+    ROUND(AVG(Punkte), 1) AS Schnitt,
+    MIN(Punkte) AS Min,
+    MAX(Punkte) AS Max,
+    MAX(Punkte) - MIN(Punkte) AS Spannweite
+FROM bundesliga;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{center}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Liga} & \textbf{Teams} & \textbf{Schnitt} & \textbf{Min} & \textbf{Max} & \textbf{Spannweite} \\
+\midrule
+Bundesliga & 18 & 26.3 & 12 & 50 & 38 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.3cm}
+
+\begin{block}{Deskriptive Statistik mit SQL}
+SQL eignet sich hervorragend für erste statistische Übersichten!
+\end{block}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HANDS-ON Phase 6
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+{
+\setbeamercolor{background canvas}{bg=IMSOrange!15}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge\color{IMSOrange} Hands-on}\\[1em]
+{\Large Komplexe Analysen}\\[2em]
+{\large\ttfamily marimo: 03-sql-aggregation.py}\\[1em]
+{\normalsize Aufgaben 6.1 -- 6.5}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Visualisierung: Aggregierte Daten}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\showagenda{6}
+
+\begin{frame}[fragile]{GROUP BY visualisieren}
+
+\textbf{Aggregierte Daten} $\rightarrow$ \textbf{Balkendiagramm}
+
+\vspace{0.3cm}
+
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}
+SELECT
+    Position,
+    AVG(Tore) AS Avg_Tore
+FROM spieler
+GROUP BY Position
+ORDER BY Avg_Tore DESC;
+\end{lstlisting}
+
+\vspace{0.3cm}
+
+\begin{lstlisting}[language=Python, morekeywords={px}]
+px.bar(ergebnis,
+       x="Position",
+       y="Avg_Tore",
+       title="Tore nach Position")
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{tikzpicture}[scale=0.7]
+    \draw[->] (0,0) -- (5.5,0) node[right, font=\small] {};
+    \draw[->] (0,0) -- (0,4) node[above, font=\small] {Avg Tore};
+    \fill[IMSBlue!70] (0.5,0) rectangle (1.3,3.2);
+    \fill[IMSBlue!70] (1.8,0) rectangle (2.6,1.8);
+    \fill[IMSBlue!70] (3.1,0) rectangle (3.9,0.8);
+    \fill[IMSBlue!70] (4.4,0) rectangle (5.2,0.3);
+    \node[font=\tiny, rotate=45, anchor=north east] at (0.9,-0.1) {Sturm};
+    \node[font=\tiny, rotate=45, anchor=north east] at (2.2,-0.1) {Mittelfeld};
+    \node[font=\tiny, rotate=45, anchor=north east] at (3.5,-0.1) {Abwehr};
+    \node[font=\tiny, rotate=45, anchor=north east] at (4.8,-0.1) {Tor};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+
+\vspace{0.3cm}
+
+$\Rightarrow$ Jede Gruppe wird ein Balken
+
+\end{frame}
+
+\begin{frame}[fragile]{Referenzlinie: Durchschnitt einzeichnen}
+
+\textbf{Idee:} Aggregat berechnen, dann als Linie in den Plot einfügen
+
+\vspace{0.3cm}
+
+\begin{columns}
+\begin{column}{0.55\textwidth}
+\begin{lstlisting}
+-- 1. Durchschnitt berechnen
+SELECT AVG(Punkte) FROM bundesliga;
+-- Ergebnis: 45.5
+\end{lstlisting}
+
+\vspace{0.2cm}
+
+\begin{lstlisting}[language=Python, morekeywords={px, fig}]
+fig = px.bar(teams,
+             x="Mannschaft",
+             y="Punkte")
+
+# Durchschnittslinie
+fig.add_hline(y=45.5,
+              line_dash="dash",
+              annotation_text="Avg")
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.45\textwidth}
+\begin{tikzpicture}[scale=0.65]
+    \draw[->] (0,0) -- (5,0);
+    \draw[->] (0,0) -- (0,4) node[above, font=\small] {Punkte};
+    \fill[IMSBlue!70] (0.3,0) rectangle (0.7,3.5);
+    \fill[IMSBlue!70] (1.0,0) rectangle (1.4,2.8);
+    \fill[IMSBlue!70] (1.7,0) rectangle (2.1,2.2);
+    \fill[IMSBlue!70] (2.4,0) rectangle (2.8,1.8);
+    \fill[IMSBlue!70] (3.1,0) rectangle (3.5,1.5);
+    \fill[IMSBlue!70] (3.8,0) rectangle (4.2,1.0);
+    % Average line
+    \draw[dashed, IMSOrange, thick] (0,2.0) -- (4.5,2.0);
+    \node[font=\tiny, IMSOrange] at (4.8,2.0) {Avg};
+\end{tikzpicture}
+
+\vspace{0.3cm}
+
+$\Rightarrow$ Wer liegt über/unter Durchschnitt?
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Zusammenfassung}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\showagenda{7}
+
+\begin{frame}[fragile]{Was wir heute gelernt haben}
+
+\begin{tabular}{lp{8cm}}
+\toprule
+\textbf{Konzept} & \textbf{Syntax / Beispiel} \\
+\midrule
+Zählen & \texttt{COUNT(*), COUNT(spalte), COUNT(DISTINCT spalte)} \\
+Summe & \texttt{SUM(spalte)} \\
+Durchschnitt & \texttt{AVG(spalte)} \\
+Extremwerte & \texttt{MIN(spalte), MAX(spalte)} \\
+\midrule
+Gruppieren & \texttt{GROUP BY spalte1, spalte2} \\
+Gruppen filtern & \texttt{HAVING aggregat > wert} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.5cm}
+
+\begin{block}{Vollständige Abfrage}
+\begin{lstlisting}
+SELECT gruppe, COUNT(*), AVG(wert)
+FROM tabelle
+WHERE bedingung_zeilen
+GROUP BY gruppe
+HAVING COUNT(*) > 5
+ORDER BY AVG(wert) DESC;
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Cheat Sheet: Aggregation}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % Box 1: Functions
+    \node[rectangle, rounded corners, draw=IMSBlue, fill=IMSBlue!10,
+          minimum width=4cm, minimum height=3cm, align=left, font=\small] at (0,0) {
+        \textbf{Funktionen}\\[0.3em]
+        \texttt{COUNT(*)} -- Zeilen\\
+        \texttt{COUNT(col)} -- Nicht-NULL\\
+        \texttt{SUM(col)} -- Summe\\
+        \texttt{AVG(col)} -- Mittelwert\\
+        \texttt{MIN/MAX(col)} -- Extrem
+    };
+
+    % Box 2: GROUP BY
+    \node[rectangle, rounded corners, draw=IMSOrange, fill=IMSOrange!10,
+          minimum width=4cm, minimum height=3cm, align=left, font=\small] at (5,0) {
+        \textbf{Gruppierung}\\[0.3em]
+        \texttt{GROUP BY col}\\[0.3em]
+        Goldene Regel:\\
+        SELECT darf nur:\\
+        - GROUP BY Spalten\\
+        - Aggregatfunktionen
+    };
+
+    % Box 3: Filter
+    \node[rectangle, rounded corners, draw=green!50!black, fill=green!10,
+          minimum width=4cm, minimum height=3cm, align=left, font=\small] at (10,0) {
+        \textbf{Filter}\\[0.3em]
+        \texttt{WHERE} -- Zeilen\\
+        {\footnotesize (vor Gruppierung)}\\[0.3em]
+        \texttt{HAVING} -- Gruppen\\
+        {\footnotesize (nach Gruppierung)}
+    };
+\end{tikzpicture}
+\end{center}
+
+\end{frame}
+
+\begin{frame}[fragile]{Schnellreferenz: Aggregatfunktionen}
+
+\begin{center}
+\small
+\begin{tabular}{llp{5.5cm}}
+\toprule
+\textbf{Funktion} & \textbf{Syntax} & \textbf{Beispiel \& Bedeutung} \\
+\midrule
+\texttt{COUNT} & \texttt{COUNT(*)} & Anzahl aller Zeilen \\
+& \texttt{COUNT(spalte)} & Anzahl nicht-NULL Werte \\
+& \texttt{COUNT(DISTINCT s)} & Anzahl eindeutiger Werte \\
+\midrule
+\texttt{SUM} & \texttt{SUM(spalte)} & Summe aller Werte (ignoriert NULL) \\
+\midrule
+\texttt{AVG} & \texttt{AVG(spalte)} & Arithmetisches Mittel (ignoriert NULL) \\
+\midrule
+\texttt{MIN} & \texttt{MIN(spalte)} & Kleinster Wert (auch Text: alphabetisch) \\
+\midrule
+\texttt{MAX} & \texttt{MAX(spalte)} & Größter Wert (auch Text: alphabetisch) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{block}{Vollständiges Abfrage-Template}
+\begin{lstlisting}
+SELECT gruppe, COUNT(*), SUM(x), AVG(x), MIN(x), MAX(x)
+FROM tabelle WHERE zeilen_filter
+GROUP BY gruppe HAVING gruppen_filter
+ORDER BY aggregat DESC LIMIT n;
+\end{lstlisting}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{Häufige Fehler vermeiden}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Die goldene Regel vergessen}
+\begin{itemize}
+    \item Nur GROUP BY Spalten oder Aggregate im SELECT
+    \item Sonst: Welcher Wert soll angezeigt werden?
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{WHERE statt HAVING}
+\begin{itemize}
+    \item WHERE: vor Gruppierung
+    \item HAVING: nach Gruppierung
+    \item Aggregate nur in HAVING!
+\end{itemize}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\textbf{NULL vergessen}
+\begin{itemize}
+    \item COUNT(*) vs COUNT(spalte)
+    \item AVG ignoriert NULL
+    \item COALESCE wenn nötig
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Reihenfolge verwechseln}
+\begin{itemize}
+    \item SELECT -- FROM -- WHERE
+    \item GROUP BY -- HAVING
+    \item ORDER BY -- LIMIT
+\end{itemize}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{Die Top 5 Aggregationsfehler}
+
+\begin{enumerate}
+    \item \textbf{Spalte nicht in GROUP BY:}\\
+    {\small\color{red}\texttt{SELECT Mannschaft, AVG(Punkte) FROM bundesliga;}}\\
+    {\small\color{green!50!black}$\rightarrow$ Entweder alle Spalten in GROUP BY oder aggregieren!}
+
+    \vspace{0.3cm}
+
+    \item \textbf{Aggregat in WHERE:}\\
+    {\small\color{red}\texttt{WHERE AVG(Punkte) > 30}}\\
+    {\small\color{green!50!black}$\rightarrow$ HAVING verwenden!}
+
+    \vspace{0.3cm}
+
+    \item \textbf{COUNT(*) vs COUNT(spalte) verwechseln:}\\
+    {\small Bei NULL-Werten verschiedene Ergebnisse!}
+
+    \vspace{0.3cm}
+
+    \item \textbf{NULL ignorieren bei AVG:}\\
+    {\small AVG(spalte) ignoriert NULL -- ist das gewollt?}
+
+    \vspace{0.3cm}
+
+    \item \textbf{Alias in HAVING verwenden:}\\
+    {\small\color{red}\texttt{HAVING Schnitt > 5}} {\small (in manchen DBs nicht erlaubt)}\\
+    {\small\color{green!50!black}$\rightarrow$ \texttt{HAVING AVG(Tore) > 5}}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Quiz: Testen Sie Ihr Wissen}
+
+\begin{enumerate}
+    \item Was ist der Unterschied zwischen \texttt{COUNT(*)} und \texttt{COUNT(spalte)}?
+
+    \pause
+    {\small\color{IMSOrange} COUNT(*) zählt alle Zeilen, COUNT(spalte) ignoriert NULL}
+
+    \vspace{0.3cm}
+
+    \item Warum kann man \texttt{AVG(Punkte) > 30} nicht in WHERE verwenden?
+
+    \pause
+    {\small\color{IMSOrange} AVG existiert erst nach GROUP BY -- WHERE filtert vorher}
+
+    \vspace{0.3cm}
+
+    \item Was passiert, wenn Sie GROUP BY vergessen aber ein Aggregat verwenden?
+
+    \pause
+    {\small\color{IMSOrange} Das Aggregat wird über ALLE Zeilen berechnet (eine Ergebniszeile)}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Praktische Anwendungen}
+
+\textbf{Business Intelligence:}
+\begin{itemize}
+    \item Umsatz pro Region, Monat, Produkt
+    \item Durchschnittlicher Bestellwert pro Kunde
+    \item Anzahl Bestellungen pro Tag
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Datenqualität:}
+\begin{itemize}
+    \item Wie viele NULL-Werte gibt es pro Spalte?
+    \item Gibt es Duplikate? (COUNT vs COUNT DISTINCT)
+    \item Wertebereich prüfen (MIN/MAX)
+\end{itemize}
+
+\vspace{0.5cm}
+
+\textbf{Reporting:}
+\begin{itemize}
+    \item Zusammenfassungen für Dashboards
+    \item KPIs berechnen
+    \item Trends identifizieren (mit Zeitgruppen)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Ausblick: Vorlesung 4}
+
+\textbf{Vorlesung 4: CRISP-DM \& Fallstudien}
+
+\begin{itemize}
+    \item Der CRISP-DM-Prozess
+    \item Fallstudie I: Dr. Harold Shipman -- Anomalieerkennung
+    \item Fallstudie II: Benford's Law -- Betrugserkennung
+    \item SQL für strukturierte Datenanalyse
+\end{itemize}
+
+\vspace{0.5cm}
+
+\begin{exampleblock}{Vorgeschmack}
+Wie konnte Datenanalyse helfen, einen Serienmord aufzuklären?\\
+Warum beginnen 30\% aller Zahlen mit der Ziffer 1?
+\end{exampleblock}
+
+\end{frame}
+
+\begin{frame}{}
+\vfill
+\begin{center}
+{\Huge Fragen?}
+
+\vspace{1.5em}
+
+{\large\ttfamily marimo: 03-sql-aggregation.py}
+
+\vspace{0.5em}
+
+{\small Weiter experimentieren!}
+\end{center}
+\vfill
+\end{frame}
+
+\end{document}

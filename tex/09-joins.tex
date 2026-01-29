@@ -739,8 +739,8 @@ Der \textbf{FULL OUTER JOIN} gibt \textbf{alle} Zeilen beider Tabellen zurück. 
 \end{center}
 
 \vspace{0.5em}
-\begin{alertblock}{SQLite-Hinweis}
-SQLite unterstützt FULL OUTER JOIN \textbf{nicht} direkt. Workaround: LEFT JOIN + UNION + RIGHT JOIN (oder LEFT JOIN simulieren).
+\begin{alertblock}{Hinweis zur Kompatibilität}
+FULL OUTER JOIN wird von DuckDB und PostgreSQL unterstützt. SQLite unterstützt ihn \textbf{nicht} direkt (Workaround: LEFT + RIGHT JOIN mit UNION).
 \end{alertblock}
 \end{frame}
 
@@ -1238,26 +1238,23 @@ Join-Spalten sollten \textbf{indiziert} sein -- besonders die Fremdschlüssel!
 
 \vspace{0.5em}
 \begin{lstlisting}
-EXPLAIN QUERY PLAN
+EXPLAIN
 SELECT s.Name, v.Name
 FROM Spieler s
 JOIN Vereine v ON s.Verein_ID = v.Verein_ID;
 \end{lstlisting}
 
 \vspace{1em}
-\textbf{Beispiel-Ausgabe (SQLite):}
-\begin{verbatim}
-QUERY PLAN
-|--SCAN Spieler
-`--SEARCH Vereine USING INDEX ...
-\end{verbatim}
-
-\vspace{1em}
-\textbf{Interpretation:}
+\textbf{Typische Operatoren im Query-Plan:}
 \begin{itemize}
-    \item \texttt{SCAN}: Alle Zeilen durchlaufen (langsam bei großen Tabellen)
-    \item \texttt{SEARCH ... USING INDEX}: Index-Lookup (schnell)
+    \item \texttt{SCAN / SEQ\_SCAN}: Alle Zeilen durchlaufen (langsam bei großen Tabellen)
+    \item \texttt{INDEX\_SCAN}: Index-Lookup (schnell)
+    \item \texttt{HASH\_JOIN}: Hash-basierter Join
+    \item \texttt{MERGE\_JOIN}: Sortier-basierter Join
 \end{itemize}
+
+\vspace{0.5em}
+\small\textit{Hinweis: Die genaue Ausgabe variiert je nach Datenbank (DuckDB, PostgreSQL, SQLite, ...)}
 \end{frame}
 
 \begin{frame}{Best Practices: JOINs optimieren}

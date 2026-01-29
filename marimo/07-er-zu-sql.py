@@ -505,7 +505,7 @@ def _(mo):
         -- Versuch: Kategorie löschen, die noch Produkte hat
         -- Dies würde normalerweise einen Fehler verursachen!
 
-        -- In SQLite: PRAGMA foreign_keys = ON; aktiviert FK-Prüfung
+        -- DuckDB prüft Foreign Keys automatisch
 
         -- Zeige Produkte in Kategorie 'Elektronik':
         SELECT p.Name, k.Name AS Kategorie

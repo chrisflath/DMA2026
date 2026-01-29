@@ -824,18 +824,18 @@ Je nach Datenbank ist LIKE case-sensitive oder nicht!
 
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\textbf{SQLite:}
+\textbf{DuckDB / PostgreSQL:}
 \begin{itemize}
-    \item \texttt{LIKE} ist case-\textbf{insensitive}
-    \item \texttt{GLOB} ist case-\textbf{sensitive}
+    \item \texttt{LIKE} ist case-\textbf{sensitive}
+    \item \texttt{ILIKE} ist case-\textbf{insensitive}
 \end{itemize}
 \end{column}
 
 \begin{column}{0.48\textwidth}
-\textbf{PostgreSQL:}
+\textbf{SQLite:}
 \begin{itemize}
-    \item \texttt{LIKE} ist case-\textbf{sensitive}
-    \item \texttt{ILIKE} ist case-\textbf{insensitive}
+    \item \texttt{LIKE} ist case-\textbf{insensitive}
+    \item \texttt{GLOB} ist case-\textbf{sensitive}
 \end{itemize}
 \end{column}
 \end{columns}

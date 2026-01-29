@@ -182,7 +182,7 @@
 \textbf{Unsere Werkzeuge}
 \begin{description}
     \item[marimo] Interaktive Python-Notebooks im Browser
-    \item[SQLite] Datenbank ohne Server-Setup
+    \item[DuckDB] Analytische Datenbank ohne Server-Setup
 \end{description}
 \end{column}
 
@@ -833,11 +833,11 @@ WHERE Mannschaft = 'Bayern München';
 
 \begin{columns}[T]
 \begin{column}{0.48\textwidth}
-\begin{alertblock}{Gross-/Kleinschreibung}
+\begin{alertblock}{Groß-/Kleinschreibung}
 Je nach Datenbank:\\
 \texttt{'Bayern'} $\neq$ \texttt{'bayern'}
 
-SQLite: meist case-insensitive
+DuckDB/PostgreSQL: case-sensitive
 \end{alertblock}
 \end{column}
 

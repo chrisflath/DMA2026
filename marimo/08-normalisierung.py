@@ -565,8 +565,8 @@ def _(mo):
     # Ihre Abfrage hier:
     _df = mo.sql(
         f"""
-        -- Beispiel: Zeige alle Tabellen
-        SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
+        -- Beispiel: Zeige alle Tabellen (DuckDB)
+        SHOW TABLES;
         """
     )
     return

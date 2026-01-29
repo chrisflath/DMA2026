@@ -1,0 +1,1048 @@
+% DMA Session 10: Subqueries, Views & Transaktionen
+% 180-Minuten-Block (Vorlesung + Übung interwoven)
+
+\documentclass[usenames,dvipsnames,10pt,aspectratio=169]{beamer}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{verbatim}
+
+\usetheme{ims}
+
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage[table]{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, fit, backgrounds, matrix}
+\usepackage{pifont}
+
+% TikZ styles
+\tikzset{
+    tablebox/.style={rectangle, draw=IMSBlue, fill=IMSBlue!5, thick,
+        minimum width=4cm, minimum height=0.8cm, font=\ttfamily\small},
+    tableheader/.style={rectangle, draw=IMSBlue, fill=IMSBlue!20, thick,
+        minimum width=4cm, minimum height=0.8cm, font=\ttfamily\small\bfseries},
+    roadmapbox/.style={rectangle, rounded corners, minimum width=2.5cm, minimum height=0.8cm,
+        text centered, draw=IMSBlue, fill=IMSBlue!10, font=\small\bfseries},
+    roadmaparrow/.style={-{Stealth[length=3mm]}, thick, IMSBlue},
+    sqlbox/.style={rectangle, rounded corners, draw=IMSOrange, fill=IMSOrange!10,
+        minimum width=2cm, minimum height=0.6cm, font=\small},
+    sqlarrow/.style={-{Stealth[length=2.5mm]}, thick, IMSOrange},
+    acidbox/.style={rectangle, rounded corners, minimum width=2.2cm, minimum height=1.2cm,
+        text centered, align=center, draw=IMSBlue, thick, font=\small\bfseries, fill=IMSBlue!10},
+    problembox/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm,
+        text centered, draw=red!70, thick, font=\small, fill=red!10},
+    solutionbox/.style={rectangle, rounded corners, minimum width=3cm, minimum height=1cm,
+        text centered, draw=green!70!black, thick, font=\small, fill=green!10},
+    querybox/.style={rectangle, rounded corners, draw=IMSBlue, fill=gray!10,
+        minimum width=5cm, minimum height=1.5cm, font=\ttfamily\footnotesize},
+}
+
+% SQL Listing Style
+\lstdefinestyle{sql}{
+    language=SQL,
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{IMSBlue}\bfseries,
+    stringstyle=\color{IMSOrange},
+    commentstyle=\color{gray}\itshape,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10},
+    morekeywords={SERIAL, BOOLEAN, TEXT, REFERENCES, CONSTRAINT, CASCADE, RESTRICT, PRIMARY, FOREIGN, KEY, UNIQUE, CHECK, DEFAULT, AUTO_INCREMENT, INT, VARCHAR, DATE, DECIMAL, NOT, NULL, WITH, AS, BEGIN, COMMIT, ROLLBACK, TRANSACTION, VIEW, CREATE, DROP, REPLACE, EXISTS, ANY, ALL, SOME, IN, RECURSIVE, TEMPORARY, TEMP, MATERIALIZED},
+    literate={ü}{{\"u}}1 {ä}{{\"a}}1 {ö}{{\"o}}1 {Ü}{{\"U}}1 {Ä}{{\"A}}1 {Ö}{{\"O}}1 {ß}{{\ss}}1
+}
+
+\lstset{style=sql}
+
+\newcommand{\cmark}{\textcolor{green!70!black}{\ding{51}}}
+\newcommand{\xmark}{\textcolor{red}{\ding{55}}}
+\newcommand{\pk}[1]{\underline{\texttt{#1}}}
+\newcommand{\fk}[1]{\texttt{\textcolor{IMSOrange}{#1}}}
+
+% ===== CLICKABLE AGENDA WITH PROGRESS INDICATOR =====
+\usepackage{hyperref}
+\hypersetup{colorlinks=false, pdfborder={0 0 0}}
+
+% Phase counter for progress tracking
+\newcounter{currentphase}
+\setcounter{currentphase}{0}
+
+% Clickable agenda item
+\newcommand{\agendaitem}[3]{%
+    \ifnum#1=#2
+        \textcolor{IMSOrange}{$\blacktriangleright$ \textbf{\hyperlink{phase#2}{#3}}}%
+    \else
+        \textcolor{gray!70}{\phantom{$\blacktriangleright$} \hyperlink{phase#2}{#3}}%
+    \fi\\[0.3em]%
+}
+
+% Progress dots for footline (clickable)
+\newcommand{\progressdots}{%
+    \begin{tikzpicture}[baseline=-0.5ex]
+        \foreach \i in {1,...,7} {
+            \ifnum\value{currentphase}=\i
+                \node[circle, fill=IMSOrange, minimum size=0.24cm, inner sep=0pt] at (\i*0.4,0) {\hyperlink{phase\i}{\phantom{oo}}};
+            \else
+                \ifnum\value{currentphase}>\i
+                    \node[circle, fill=IMSBlue!60, minimum size=0.2cm, inner sep=0pt] at (\i*0.4,0) {\hyperlink{phase\i}{\phantom{oo}}};
+                \else
+                    \node[circle, draw=gray!50, minimum size=0.2cm, inner sep=0pt] at (\i*0.4,0) {\hyperlink{phase\i}{\phantom{oo}}};
+                \fi
+            \fi
+        }
+    \end{tikzpicture}%
+}
+
+% Add progress indicator to footline
+\setbeamertemplate{footline}{%
+    \leavevmode%
+    \hbox{%
+        \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,left]{author in head/foot}%
+            \usebeamerfont{author in head/foot}\hspace*{2ex}\insertshortauthor
+        \end{beamercolorbox}%
+        \begin{beamercolorbox}[wd=.34\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}%
+            \progressdots
+        \end{beamercolorbox}%
+        \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,right]{date in head/foot}%
+            \usebeamerfont{date in head/foot}\insertframenumber{} / \inserttotalframenumber\hspace*{2ex}
+        \end{beamercolorbox}%
+    }%
+    \vskip0pt%
+}
+
+% Show agenda (with hyperlink target)
+\newcommand{\showagenda}[1]{%
+    \setcounter{currentphase}{#1}%
+    \hypertarget{phase#1}{}%
+    \begin{frame}{Agenda}
+    \vfill
+    \begin{center}
+    \begin{minipage}{0.7\textwidth}
+    \large
+    \agendaitem{#1}{1}{1 ~ Rückblick \& Motivation}
+    \agendaitem{#1}{2}{2 ~ Subqueries: Grundlagen}
+    \agendaitem{#1}{3}{3 ~ Common Table Expressions (CTEs)}
+    \agendaitem{#1}{4}{4 ~ Views: Virtuelle Tabellen}
+    \agendaitem{#1}{5}{5 ~ Transaktionen: ACID}
+    \agendaitem{#1}{6}{6 ~ Concurrency-Probleme}
+    \agendaitem{#1}{7}{7 ~ Zusammenfassung}
+    \end{minipage}
+    \end{center}
+    \vfill
+    \end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title[DMA 10]{Datenmanagement \& -analyse}
+\subtitle{Vorlesung 10: Subqueries, Views \& Transaktionen}
+\author{Prof. Dr. Christoph M. Flath}
+\institute{Lehrstuhl für Wirtschaftsinformatik und Business Analytics\\Julius-Maximilians-Universität Würzburg}
+\date{Sommersemester 2026}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+% ===== TITLE =====
+\begin{frame}[plain]
+    \titlepage
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showagenda{1}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Rückblick: JOINs}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Was wir gelernt haben:}
+\begin{itemize}
+    \item INNER JOIN: Schnittmenge
+    \item LEFT/RIGHT JOIN: Erhalt einer Seite
+    \item Self-Joins: Tabelle mit sich selbst
+    \item Join-Performance: Indizes nutzen
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.7]
+    % Venn diagram for INNER JOIN
+    \fill[IMSBlue!30] (0,0) circle (1.2);
+    \fill[IMSOrange!30] (1.5,0) circle (1.2);
+    \begin{scope}
+        \clip (0,0) circle (1.2);
+        \fill[green!40] (1.5,0) circle (1.2);
+    \end{scope}
+    \draw[thick, IMSBlue] (0,0) circle (1.2) node[left=0.8cm] {\small A};
+    \draw[thick, IMSOrange] (1.5,0) circle (1.2) node[right=0.8cm] {\small B};
+    \node at (0.75,-1.8) {\footnotesize INNER JOIN};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}
+
+\vspace{1em}
+
+\begin{block}{Heute: Komplexere Abfragen strukturieren}
+Wie können wir Abfragen \textbf{modular} und \textbf{wiederverwendbar} gestalten?
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Motivation: Komplexe Abfragen}
+\textbf{Problem:} Abfragen werden schnell unübersichtlich
+
+\begin{lstlisting}
+SELECT Mannschaft, Punkte,
+       (SELECT AVG(Punkte) FROM bundesliga) AS Durchschnitt,
+       Punkte - (SELECT AVG(Punkte) FROM bundesliga) AS Differenz
+FROM bundesliga
+WHERE Punkte > (SELECT AVG(Punkte) FROM bundesliga)
+ORDER BY Punkte DESC;
+\end{lstlisting}
+
+\vspace{1em}
+
+\begin{alertblock}{Probleme dieser Abfrage}
+\begin{itemize}
+    \item Durchschnitt wird 3x berechnet (redundant)
+    \item Schwer zu lesen und zu warten
+    \item Fehleranfällig bei Änderungen
+\end{itemize}
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Lösungsansätze}
+\begin{center}
+\begin{tikzpicture}
+    \node[roadmapbox, minimum width=3.5cm] (sub) at (0,0) {Subqueries};
+    \node[roadmapbox, minimum width=3.5cm] (cte) at (5,0) {CTEs (WITH)};
+    \node[roadmapbox, minimum width=3.5cm] (view) at (10,0) {Views};
+
+    \draw[roadmaparrow] (sub) -- (cte) node[midway, above, font=\small] {lesbarer};
+    \draw[roadmaparrow] (cte) -- (view) node[midway, above, font=\small] {persistent};
+
+    \node[font=\footnotesize, text width=3cm, align=center] at (0,-1.2) {Abfrage in\\Abfrage};
+    \node[font=\footnotesize, text width=3cm, align=center] at (5,-1.2) {Benannte\\Zwischenergebnisse};
+    \node[font=\footnotesize, text width=3cm, align=center] at (10,-1.2) {Gespeicherte\\Abfrage};
+\end{tikzpicture}
+\end{center}
+
+\vspace{1em}
+
+\textbf{Und danach:} Transaktionen -- wie Änderungen sicher durchgeführt werden
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showagenda{2}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Subquery-Typen}
+\begin{center}
+\begin{tikzpicture}
+    \node[acidbox, minimum width=3cm, fill=IMSBlue!20] (scalar) at (0,0) {\shortstack{Scalar\\(1 Wert)}};
+    \node[acidbox, minimum width=3cm, fill=IMSOrange!20] (column) at (4.5,0) {\shortstack{Column\\(1 Spalte)}};
+    \node[acidbox, minimum width=3cm, fill=green!20] (table) at (9,0) {\shortstack{Table\\(Tabelle)}};
+\end{tikzpicture}
+\end{center}
+
+\vspace{1em}
+
+\begin{columns}[T]
+\begin{column}{0.33\textwidth}
+\textbf{Scalar Subquery:}
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+SELECT Mannschaft,
+  Punkte - (
+    SELECT AVG(Punkte)
+    FROM bundesliga
+  ) AS Diff
+FROM bundesliga;
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.33\textwidth}
+\textbf{Column Subquery:}
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+SELECT Mannschaft
+FROM bundesliga
+WHERE Mannschaft IN (
+  SELECT Mannschaft
+  FROM champions
+);
+\end{lstlisting}
+\end{column}
+
+\begin{column}{0.33\textwidth}
+\textbf{Table Subquery:}
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+SELECT t.Mannschaft
+FROM (
+  SELECT Mannschaft,
+         Punkte
+  FROM bundesliga
+  WHERE Punkte > 50
+) AS t;
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Scalar Subquery: Ein Wert}
+\textbf{Gibt genau einen Wert zurück} -- kann überall stehen, wo ein Wert erwartet wird
+
+\begin{lstlisting}
+-- Durchschnittspunkte aller Teams
+SELECT Mannschaft, Punkte,
+       (SELECT AVG(Punkte) FROM bundesliga) AS Liga_Schnitt
+FROM bundesliga
+ORDER BY Punkte DESC;
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Verwendbar in:}
+\begin{itemize}
+    \item SELECT (wie oben)
+    \item WHERE-Bedingungen
+    \item HAVING-Bedingungen
+    \item Berechnungen
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{alertblock}{Achtung}
+Scalar Subquery muss \textbf{genau 1 Zeile} und \textbf{1 Spalte} liefern!
+
+Sonst: Fehler.
+\end{alertblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Column Subquery: IN, ANY, ALL}
+\textbf{Gibt eine Liste von Werten zurück}
+
+\begin{lstlisting}
+-- Teams, die im Pokal-Halbfinale waren
+SELECT Mannschaft, Punkte
+FROM bundesliga
+WHERE Mannschaft IN (
+    SELECT team FROM pokal_halbfinale
+);
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Operatoren:}
+\begin{itemize}
+    \item \texttt{IN}: Wert in Liste?
+    \item \texttt{NOT IN}: Wert nicht in Liste?
+    \item \texttt{ANY/SOME}: mind. einer erfüllt
+    \item \texttt{ALL}: alle erfüllen
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{lstlisting}[basicstyle=\ttfamily\tiny]
+-- Mehr Punkte als IRGENDEIN
+-- Team aus Berlin
+WHERE Punkte > ANY (
+  SELECT Punkte
+  FROM bundesliga
+  WHERE Mannschaft LIKE '%Berlin%'
+);
+
+-- Mehr Punkte als ALLE
+-- Teams aus Berlin
+WHERE Punkte > ALL (...);
+\end{lstlisting}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Korrelierte Subquery}
+\textbf{Referenziert die äußere Abfrage} -- wird für jede Zeile neu ausgeführt
+
+\begin{lstlisting}
+-- Teams mit überdurchschnittlich vielen Siegen für ihre Punktzahl
+SELECT m1.Mannschaft, m1.Punkte, m1.Siege
+FROM bundesliga m1
+WHERE m1.Siege > (
+    SELECT AVG(m2.Siege)
+    FROM bundesliga m2
+    WHERE m2.Punkte BETWEEN m1.Punkte - 5 AND m1.Punkte + 5
+);
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{center}
+\begin{tikzpicture}
+    \node[querybox, minimum width=4cm, align=center] (outer) at (0,0) {Äußere Abfrage\\(m1)};
+    \node[querybox, minimum width=4cm, fill=IMSOrange!10, draw=IMSOrange, align=center] (inner) at (6,0) {Innere Abfrage\\(m2)};
+
+    \draw[sqlarrow, <->] (outer) -- (inner) node[midway, above, font=\small] {Referenz auf m1.Punkte};
+\end{tikzpicture}
+\end{center}
+
+\begin{alertblock}{Performance}
+Korrelierte Subqueries können langsam sein -- für jede Zeile wird die innere Abfrage ausgeführt!
+\end{alertblock}
+\end{frame}
+
+\begin{frame}[fragile]{EXISTS: Existenzprüfung}
+\textbf{Prüft, ob Subquery Ergebnisse liefert}
+
+\begin{lstlisting}
+-- Teams, die mindestens ein Heimspiel mit 5+ Toren hatten
+SELECT DISTINCT m.Mannschaft
+FROM bundesliga m
+WHERE EXISTS (
+    SELECT 1 FROM spiele s
+    WHERE s.Heim = m.Mannschaft
+    AND s.Heimtore >= 5
+);
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{EXISTS vs. IN:}
+\begin{itemize}
+    \item EXISTS: Stoppt beim ersten Treffer
+    \item IN: Prüft alle Werte
+    \item EXISTS oft schneller bei großen Subqueries
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{exampleblock}{Tipp}
+\texttt{SELECT 1} in EXISTS -- der Wert ist egal, nur die Existenz zählt.
+\end{exampleblock}
+\end{column}
+\end{columns}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HANDS-ON 1
+{
+\setbeamercolor{background canvas}{bg=IMSOrange!15}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge\color{IMSOrange} Hands-on}\\[1em]
+{\Large Subqueries üben}\\[2em]
+{\large\ttfamily marimo: 10-subqueries-views-transaktionen.py}\\[1em]
+{\normalsize Aufgaben 10.1 -- 10.3}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showagenda{3}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Common Table Expressions (CTEs)}
+\textbf{Benannte Zwischenergebnisse} -- macht komplexe Abfragen lesbar
+
+\begin{lstlisting}
+WITH durchschnitt AS (
+    SELECT AVG(Punkte) AS avg_punkte
+    FROM bundesliga
+)
+SELECT Mannschaft, Punkte,
+       Punkte - (SELECT avg_punkte FROM durchschnitt) AS Differenz
+FROM bundesliga, durchschnitt
+WHERE Punkte > durchschnitt.avg_punkte
+ORDER BY Punkte DESC;
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{block}{Vorteile von CTEs}
+\begin{itemize}
+    \item Lesbarkeit: Komplexe Logik in benannte Blöcke aufteilen
+    \item Wiederverwendung: CTE kann mehrfach referenziert werden
+    \item Debugging: Einzelne CTEs separat testen
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{CTE Syntax}
+\begin{center}
+\begin{tikzpicture}
+    \node[sqlbox, minimum width=8cm, minimum height=3cm, font=\ttfamily\small, align=left] at (0,0) {
+        \textcolor{IMSBlue}{\textbf{WITH}} cte\_name \textcolor{IMSBlue}{\textbf{AS}} (\\
+        \quad\quad SELECT ...\\
+        ),\\
+        weitere\_cte \textcolor{IMSBlue}{\textbf{AS}} (\\
+        \quad\quad SELECT ...\\
+        )\\
+        \textcolor{IMSBlue}{\textbf{SELECT}} ... \textcolor{IMSBlue}{\textbf{FROM}} cte\_name ...
+    };
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{itemize}
+    \item CTEs werden mit \texttt{WITH} eingeleitet
+    \item Mehrere CTEs durch Komma getrennt
+    \item Jede CTE hat einen Namen und eine Abfrage
+    \item Hauptabfrage folgt nach der letzten CTE
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Mehrere CTEs verketten}
+\begin{lstlisting}
+WITH
+-- Schritt 1: Nur Top-Teams
+top_teams AS (
+    SELECT Mannschaft, Punkte, Siege
+    FROM bundesliga
+    WHERE Punkte > 50
+),
+-- Schritt 2: Statistiken berechnen
+team_stats AS (
+    SELECT Mannschaft,
+           Punkte,
+           CAST(Siege AS FLOAT) / NULLIF(Spiele, 0) AS Siegquote
+    FROM top_teams
+)
+-- Hauptabfrage
+SELECT * FROM team_stats
+ORDER BY Siegquote DESC;
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\textbf{Tipp:} Jede CTE kann vorherige CTEs referenzieren!
+\end{frame}
+
+\begin{frame}[fragile]{Rekursive CTEs}
+\textbf{Für hierarchische Daten} (Org-Charts, Stücklisten, Graphen)
+
+\begin{lstlisting}
+WITH RECURSIVE mitarbeiter_hierarchie AS (
+    -- Basisfall: CEO (kein Vorgesetzter)
+    SELECT id, name, chef_id, 1 AS ebene
+    FROM mitarbeiter
+    WHERE chef_id IS NULL
+
+    UNION ALL
+
+    -- Rekursion: Mitarbeiter des aktuellen Levels
+    SELECT m.id, m.name, m.chef_id, h.ebene + 1
+    FROM mitarbeiter m
+    JOIN mitarbeiter_hierarchie h ON m.chef_id = h.id
+)
+SELECT * FROM mitarbeiter_hierarchie;
+\end{lstlisting}
+
+\begin{alertblock}{Vorsicht}
+Endlosschleifen vermeiden! Immer Abbruchbedingung sicherstellen.
+\end{alertblock}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HANDS-ON 2
+{
+\setbeamercolor{background canvas}{bg=IMSOrange!15}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge\color{IMSOrange} Hands-on}\\[1em]
+{\Large CTEs strukturieren Abfragen}\\[2em]
+{\large\ttfamily marimo: 10-subqueries-views-transaktionen.py}\\[1em]
+{\normalsize Aufgaben 10.4 -- 10.5}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PAUSE
+{
+\setbeamercolor{background canvas}{bg=gray!20}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge ☕ Pause}\\[1em]
+{\Large 15 Minuten}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showagenda{4}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}[fragile]{Views: Virtuelle Tabellen}
+\textbf{Gespeicherte Abfrage}, die sich wie eine Tabelle verhält
+
+\begin{lstlisting}
+CREATE VIEW top_teams AS
+SELECT Mannschaft, Punkte, Tordifferenz
+FROM bundesliga
+WHERE Punkte > 50;
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{lstlisting}
+-- Verwendung wie eine normale Tabelle
+SELECT * FROM top_teams ORDER BY Punkte DESC;
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{View ist:}
+\begin{itemize}
+    \item Keine Datenkopie
+    \item Wird bei jedem Aufruf ausgeführt
+    \item Immer aktuell
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Vorteile:}
+\begin{itemize}
+    \item Abstraktion komplexer Abfragen
+    \item Zugriffskontrolle (nur View freigeben)
+    \item Wiederverwendbarkeit
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Views erstellen und verwalten}
+\begin{lstlisting}
+-- View erstellen
+CREATE VIEW team_statistik AS
+SELECT Mannschaft,
+       Punkte,
+       ToreGeschossen,
+       ToreKassiert,
+       ROUND(CAST(Siege AS FLOAT) / Spiele * 100, 1) AS Siegquote
+FROM bundesliga;
+
+-- View aktualisieren (DROP + CREATE oder:)
+CREATE OR REPLACE VIEW team_statistik AS
+SELECT ... -- neue Definition
+
+-- View löschen
+DROP VIEW team_statistik;
+
+-- View anzeigen (DuckDB)
+SHOW TABLES;  -- Views werden auch gelistet
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Views: Wann einsetzen?}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{\cmark\ Gute Anwendungsfälle:}
+\begin{itemize}
+    \item Komplexe JOINs abstrahieren
+    \item Berechnete Spalten bereitstellen
+    \item Zugriff auf Teilmengen erlauben
+    \item Konsistente Schnittstelle für Anwendungen
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{\xmark\ Weniger geeignet:}
+\begin{itemize}
+    \item Sehr häufige, teure Abfragen\\
+          $\rightarrow$ Materialized View
+    \item Einfache Abfragen\\
+          $\rightarrow$ Direkt abfragen
+    \item Einmalige Analysen\\
+          $\rightarrow$ CTEs nutzen
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{1em}
+
+\begin{exampleblock}{Materialized Views (Konzept)}
+\textbf{Materialized Views} speichern das Ergebnis physisch -- schneller, aber muss aktualisiert werden. Nicht in allen Datenbanken verfügbar.
+\end{exampleblock}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showagenda{5}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Transaktionen: Warum?}
+\textbf{Problem:} Mehrere zusammengehörige Änderungen
+
+\begin{center}
+\begin{tikzpicture}
+    \node[problembox, align=center] (p1) at (0,0) {Überweisung:\\100EUR von A nach B};
+
+    \node[sqlbox, minimum width=3cm, align=center] (s1) at (5,1) {UPDATE A\\SET Saldo = Saldo - 100};
+    \node[sqlbox, minimum width=3cm, align=center] (s2) at (5,-1) {UPDATE B\\SET Saldo = Saldo + 100};
+
+    \draw[sqlarrow] (p1) -- (s1);
+    \draw[sqlarrow] (p1) -- (s2);
+
+    \node[problembox, draw=red, fill=red!20, align=center] (crash) at (10,0) {Absturz\\nach S1?};
+    \draw[roadmaparrow, red] (s1) -- (crash);
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{alertblock}{Das Problem}
+A hat 100EUR weniger, B hat nicht mehr bekommen!
+\end{alertblock}
+
+\textbf{Lösung:} Transaktionen -- ``Alles oder nichts''
+\end{frame}
+
+\begin{frame}{ACID-Eigenschaften}
+\begin{center}
+\begin{tikzpicture}
+    \node[acidbox, fill=red!20] (a) at (0,0) {\shortstack{\textbf{A}tomicity\\Alles oder nichts}};
+    \node[acidbox, fill=blue!20] (c) at (4,0) {\shortstack{\textbf{C}onsistency\\Konsistenz}};
+    \node[acidbox, fill=green!20] (i) at (8,0) {\shortstack{\textbf{I}solation\\Isolation}};
+    \node[acidbox, fill=yellow!30] (d) at (12,0) {\shortstack{\textbf{D}urability\\Dauerhaftigkeit}};
+\end{tikzpicture}
+\end{center}
+
+\vspace{1em}
+
+\begin{description}
+    \item[Atomicity:] Transaktion wird ganz oder gar nicht ausgeführt
+    \item[Consistency:] Datenbank bleibt in konsistentem Zustand
+    \item[Isolation:] Parallele Transaktionen beeinflussen sich nicht
+    \item[Durability:] Bestätigte Änderungen überleben Systemausfälle
+\end{description}
+\end{frame}
+
+\begin{frame}[fragile]{Transaktion: Syntax}
+\begin{lstlisting}
+BEGIN TRANSACTION;
+
+-- Alle Änderungen hier sind Teil der Transaktion
+UPDATE konten SET saldo = saldo - 100 WHERE konto_id = 'A';
+UPDATE konten SET saldo = saldo + 100 WHERE konto_id = 'B';
+
+-- Alles erfolgreich? Speichern!
+COMMIT;
+
+-- Oder: Fehler? Alles rückgängig!
+ROLLBACK;
+\end{lstlisting}
+
+\vspace{0.5em}
+
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{COMMIT:}
+\begin{itemize}
+    \item Alle Änderungen werden permanent
+    \item Transaktion ist abgeschlossen
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{ROLLBACK:}
+\begin{itemize}
+    \item Alle Änderungen werden verworfen
+    \item Zustand vor BEGIN wiederhergestellt
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Beispiel: Sichere Überweisung}
+\begin{lstlisting}
+BEGIN TRANSACTION;
+
+-- Prüfen: Hat A genug Geld?
+SELECT saldo FROM konten WHERE konto_id = 'A';
+-- Annahme: 500EUR -> OK
+
+-- Abbuchen
+UPDATE konten SET saldo = saldo - 100 WHERE konto_id = 'A';
+
+-- Gutschreiben
+UPDATE konten SET saldo = saldo + 100 WHERE konto_id = 'B';
+
+-- Prüfen: Saldo von A nicht negativ?
+SELECT saldo FROM konten WHERE konto_id = 'A';
+-- Falls < 0: ROLLBACK; sonst:
+
+COMMIT;
+\end{lstlisting}
+
+\textbf{Bei Fehler oder Absturz:} Automatisches ROLLBACK (Atomicity)
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showagenda{6}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Concurrency-Probleme}
+\textbf{Was passiert bei gleichzeitigen Zugriffen?}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.9]
+    % Timeline
+    \draw[->, thick] (0,0) -- (10,0) node[right] {Zeit};
+
+    % Transaction 1
+    \node[sqlbox, minimum width=1.5cm] (t1a) at (1,1.5) {T1: Read};
+    \node[sqlbox, minimum width=1.5cm] (t1b) at (4,1.5) {T1: Write};
+    \node[sqlbox, minimum width=1.5cm] (t1c) at (7,1.5) {T1: Commit};
+    \draw[thick, IMSBlue] (t1a) -- (t1b) -- (t1c);
+
+    % Transaction 2
+    \node[sqlbox, minimum width=1.5cm, fill=IMSOrange!20] (t2a) at (2.5,-1.5) {T2: Read};
+    \node[sqlbox, minimum width=1.5cm, fill=IMSOrange!20] (t2b) at (5.5,-1.5) {T2: Write};
+    \node[sqlbox, minimum width=1.5cm, fill=IMSOrange!20] (t2c) at (8.5,-1.5) {T2: Commit};
+    \draw[thick, IMSOrange] (t2a) -- (t2b) -- (t2c);
+
+    % Labels
+    \node at (-1, 1.5) {Transaktion 1};
+    \node at (-1, -1.5) {Transaktion 2};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\textbf{Klassische Probleme:}
+\begin{enumerate}
+    \item Lost Update
+    \item Dirty Read
+    \item Non-Repeatable Read
+    \item Phantom Read
+\end{enumerate}
+\end{frame}
+
+\begin{frame}{Lost Update}
+\textbf{Zwei Transaktionen überschreiben sich gegenseitig}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % Initial state
+    \node[tablebox, minimum width=2cm] at (0,3) {Saldo: 100EUR};
+
+    % Timeline
+    \draw[->, thick] (0,0) -- (11,0) node[right] {Zeit};
+
+    % T1
+    \node[sqlbox, font=\tiny] (t1r) at (2,1.5) {Read: 100EUR};
+    \node[sqlbox, font=\tiny] (t1w) at (8,1.5) {Write: 150EUR};
+    \draw[thick, IMSBlue] (t1r) -- (t1w);
+    \node at (-0.5,1.5) {\footnotesize T1 (+50EUR)};
+
+    % T2
+    \node[sqlbox, font=\tiny, fill=IMSOrange!20] (t2r) at (4,-1.5) {Read: 100EUR};
+    \node[sqlbox, font=\tiny, fill=IMSOrange!20] (t2w) at (6,-1.5) {Write: 120EUR};
+    \draw[thick, IMSOrange] (t2r) -- (t2w);
+    \node at (-0.5,-1.5) {\footnotesize T2 (+20EUR)};
+
+    % Result
+    \node[problembox, font=\small, align=center] at (9.5,-1.5) {Ergebnis: 150 EUR\\statt 170 EUR!};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\textbf{Problem:} T2's Änderung (+20EUR) geht verloren, weil T1 den alten Wert überschreibt.
+\end{frame}
+
+\begin{frame}{Dirty Read}
+\textbf{Lesen von nicht-committeten Daten}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+    % Timeline
+    \draw[->, thick] (0,0) -- (11,0) node[right] {Zeit};
+
+    % T1
+    \node[sqlbox, font=\tiny] (t1w) at (2,1.5) {Write: 150EUR};
+    \node[sqlbox, font=\tiny, fill=red!20] (t1r) at (7,1.5) {ROLLBACK};
+    \draw[thick, IMSBlue] (t1w) -- (t1r);
+    \node at (-0.5,1.5) {\footnotesize T1};
+
+    % T2
+    \node[sqlbox, font=\tiny, fill=IMSOrange!20] (t2r) at (4,-1.5) {Read: 150EUR};
+    \node[sqlbox, font=\tiny, fill=IMSOrange!20] (t2c) at (9,-1.5) {Commit};
+    \draw[thick, IMSOrange] (t2r) -- (t2c);
+    \node at (-0.5,-1.5) {\footnotesize T2};
+
+    % Problem
+    \draw[dashed, red, thick] (t1w) -- (t2r);
+    \node[problembox, font=\small, align=center] at (4,-3) {T2 sieht Wert,\\der nie existierte!};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.5em}
+
+\textbf{Problem:} T2 arbeitet mit Daten, die T1 später zurückrollt.
+\end{frame}
+
+\begin{frame}{Isolation Levels}
+\textbf{Trade-off:} Mehr Isolation = weniger Parallelität
+
+\begin{center}
+\footnotesize
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\rowcolor{IMSBlue!20}
+\textbf{Isolation Level} & \textbf{Dirty Read} & \textbf{Non-Rep. Read} & \textbf{Phantom} & \textbf{Performance} \\
+\hline
+READ UNCOMMITTED & \xmark & \xmark & \xmark & ⚡⚡⚡ \\
+\hline
+READ COMMITTED & \cmark & \xmark & \xmark & ⚡⚡ \\
+\hline
+REPEATABLE READ & \cmark & \cmark & \xmark & ⚡ \\
+\hline
+SERIALIZABLE & \cmark & \cmark & \cmark & 🐢 \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{0.5em}
+
+\begin{itemize}
+    \item \textbf{READ COMMITTED} ist oft der Standard
+    \item \textbf{SERIALIZABLE} verhält sich wie sequentielle Ausführung
+    \item DuckDB: Verwendet optimistisches Locking
+\end{itemize}
+\end{frame}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% HANDS-ON 3
+{
+\setbeamercolor{background canvas}{bg=IMSOrange!15}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge\color{IMSOrange} Hands-on}\\[1em]
+{\Large Views \& Transaktionen}\\[2em]
+{\large\ttfamily marimo: 10-subqueries-views-transaktionen.py}\\[1em]
+{\normalsize Aufgaben 10.6 -- 10.8}
+\end{center}
+\vfill
+\end{frame}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\showagenda{7}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}{Zusammenfassung}
+\begin{columns}[T]
+\begin{column}{0.5\textwidth}
+\textbf{Subqueries:}
+\begin{itemize}
+    \item Scalar: Ein Wert
+    \item Column: Liste (IN, ANY, ALL)
+    \item Table: Zwischentabelle
+    \item Korreliert: Referenz auf äußere Abfrage
+    \item EXISTS: Existenzprüfung
+\end{itemize}
+
+\vspace{0.5em}
+
+\textbf{CTEs (WITH):}
+\begin{itemize}
+    \item Benannte Zwischenergebnisse
+    \item Mehrfach verwendbar
+    \item Rekursiv möglich
+\end{itemize}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\textbf{Views:}
+\begin{itemize}
+    \item Gespeicherte Abfragen
+    \item Verhält sich wie Tabelle
+    \item Abstraktion \& Zugriffskontrolle
+\end{itemize}
+
+\vspace{0.5em}
+
+\textbf{Transaktionen:}
+\begin{itemize}
+    \item ACID-Eigenschaften
+    \item BEGIN, COMMIT, ROLLBACK
+    \item Concurrency-Probleme
+    \item Isolation Levels
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Entscheidungshilfe: Was wann nutzen?}
+\begin{center}
+\begin{tikzpicture}[
+    decision/.style={diamond, draw=IMSBlue, fill=IMSBlue!10, thick,
+        aspect=2, minimum width=2.5cm, font=\small},
+    result/.style={rectangle, rounded corners, draw=IMSOrange, fill=IMSOrange!10,
+        thick, minimum width=2cm, minimum height=0.8cm, font=\small\bfseries}
+]
+    \node[decision] (q1) at (0,0) {Einmalig?};
+    \node[decision] (q2) at (-3,-2) {Komplex?};
+    \node[decision, align=center] (q3) at (3,-2) {Mehrfach\\in Session?};
+
+    \node[result] (r1) at (-5,-4) {Subquery};
+    \node[result] (r2) at (-1,-4) {CTE};
+    \node[result] (r3) at (3,-4) {View};
+
+    \draw[->, thick] (q1) -- node[left, font=\footnotesize] {ja} (q2);
+    \draw[->, thick] (q1) -- node[right, font=\footnotesize] {nein} (q3);
+    \draw[->, thick] (q2) -- node[left, font=\footnotesize] {nein} (r1);
+    \draw[->, thick] (q2) -- node[right, font=\footnotesize] {ja} (r2);
+    \draw[->, thick] (q3) -- node[right, font=\footnotesize] {ja/nein} (r3);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}{Ausblick: Vorlesung 11}
+\textbf{Explorative Datenanalyse (EDA)}
+
+\begin{itemize}
+    \item Systematische Datenexploration
+    \item Univariate \& bivariate Analyse
+    \item Visualisierung mit SQL + Python
+    \item CASE WHEN für Kategorisierung
+    \item Binning und Histogramme
+\end{itemize}
+
+\vspace{1em}
+
+\begin{exampleblock}{Vorbereitung}
+\begin{itemize}
+    \item Notebook 10 abschließen
+    \item Wiederholen: Aggregatfunktionen, GROUP BY
+\end{itemize}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[plain]
+\vfill
+\begin{center}
+{\Huge Fragen?}\\[2em]
+{\Large\ttfamily christoph.flath@uni-wuerzburg.de}
+\end{center}
+\vfill
+\end{frame}
+
+\end{document}

@@ -117,6 +117,12 @@ def _():
 
 
 @app.cell
+def _():
+    import plotly.express as px
+    return (px,)
+
+
+@app.cell
 def _(pd):
     # Erweiterte Spieler-Daten für Aggregationsübungen
     spieler = pd.DataFrame({
@@ -293,7 +299,7 @@ def _(mo):
 
 @app.cell
 def _(mo, spieler):
-    _df = mo.sql(
+    tore_by_position = mo.sql(
         f"""
         SELECT
             Position,
@@ -305,7 +311,31 @@ def _(mo, spieler):
         ORDER BY Schnitt_Tore DESC
         """
     )
+    return (tore_by_position,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+        ### Visualisierung: Aggregierte Daten als Balkendiagramm
+
+        Mit `GROUP BY` berechnete Werte lassen sich hervorragend als Balkendiagramm darstellen:
+        """
+    )
     return
+
+
+@app.cell
+def _(px, tore_by_position):
+    px.bar(
+        tore_by_position.to_pandas(),
+        x="Position",
+        y="Schnitt_Tore",
+        title="Durchschnittliche Tore nach Position",
+        labels={"Position": "Position", "Schnitt_Tore": "Ø Tore"},
+        color="Position"
+    )
 
 
 @app.cell(hide_code=True)
@@ -514,6 +544,63 @@ def _(bundesliga, mo):
 def _(mo):
     mo.md(
         r"""
+        ---
+
+        ## Visualisierung: Referenzlinien
+
+        Ein häufiges Muster: Balkendiagramm mit **Durchschnittslinie** als Referenz.
+        So sieht man sofort, welche Werte über/unter dem Durchschnitt liegen.
+        """
+    )
+    return
+
+
+@app.cell
+def _(bundesliga, mo):
+    team_punkte = mo.sql(
+        f"""
+        SELECT Mannschaft, Punkte
+        FROM bundesliga
+        ORDER BY Punkte DESC
+        """
+    )
+    return (team_punkte,)
+
+
+@app.cell
+def _(bundesliga, mo, px, team_punkte):
+    # Durchschnitt berechnen
+    avg_result = mo.sql(f"SELECT AVG(Punkte) AS avg FROM bundesliga")
+    avg_punkte = avg_result.to_pandas().iloc[0, 0]
+
+    # Balkendiagramm mit Referenzlinie
+    fig = px.bar(
+        team_punkte.to_pandas(),
+        x="Mannschaft",
+        y="Punkte",
+        title="Bundesliga: Punkte pro Team mit Liga-Durchschnitt",
+        labels={"Mannschaft": "Team", "Punkte": "Punkte"}
+    )
+
+    # Durchschnittslinie hinzufügen
+    fig.add_hline(
+        y=avg_punkte,
+        line_dash="dash",
+        line_color="red",
+        annotation_text=f"Ø {avg_punkte:.1f}",
+        annotation_position="right"
+    )
+
+    fig.update_layout(xaxis_tickangle=-45)
+    fig
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
+        **Interpretation:** Teams über der roten Linie performen überdurchschnittlich.
+
         ---
 
         ## Freie Exploration

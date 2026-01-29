@@ -158,11 +158,11 @@
 
 \begin{frame}{Rückblick: Der Modellierungsprozess}
 \begin{center}
-\begin{tikzpicture}[node distance=1.8cm]
-    \node[roadmapbox, minimum width=3.5cm] (real) {Reale Welt};
-    \node[roadmapbox, minimum width=3.5cm, right=of real, fill=green!10, draw=green!50!black] (er) {ER-Modell};
-    \node[roadmapbox, minimum width=3.5cm, right=of er, fill=IMSOrange!20, draw=IMSOrange] (rel) {Relationales Schema};
-    \node[roadmapbox, minimum width=3.5cm, right=of rel] (sql) {SQL-Tabellen};
+\begin{tikzpicture}[node distance=1.2cm, scale=0.85, transform shape]
+    \node[roadmapbox, minimum width=2.8cm] (real) {Reale Welt};
+    \node[roadmapbox, minimum width=2.8cm, right=of real, fill=green!10, draw=green!50!black] (er) {ER-Modell};
+    \node[roadmapbox, minimum width=3.2cm, right=of er, fill=IMSOrange!20, draw=IMSOrange] (rel) {Rel. Schema};
+    \node[roadmapbox, minimum width=2.8cm, right=of rel] (sql) {SQL-Tabellen};
 
     \draw[roadmaparrow] (real) -- (er) node[midway, above, font=\footnotesize] {\cmark};
     \draw[roadmaparrow, IMSOrange, thick] (er) -- (rel) node[midway, above, font=\footnotesize] {Heute!};

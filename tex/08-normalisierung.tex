@@ -155,12 +155,12 @@
 
 \begin{frame}{Rückblick: Der Weg zu SQL-Tabellen}
 \begin{center}
-\begin{tikzpicture}[node distance=1.5cm]
-    \node[roadmapbox] (real) {Reale Welt};
-    \node[roadmapbox, right=of real, fill=green!10, draw=green!50!black] (er) {ER-Modell};
-    \node[roadmapbox, right=of er, fill=green!10, draw=green!50!black] (rel) {Rel. Schema};
-    \node[roadmapbox, right=of rel, fill=IMSOrange!20, draw=IMSOrange] (norm) {Normalisierung};
-    \node[roadmapbox, right=of norm] (sql) {SQL-Tabellen};
+\begin{tikzpicture}[node distance=0.8cm, scale=0.75, transform shape]
+    \node[roadmapbox, minimum width=2.2cm] (real) {Reale Welt};
+    \node[roadmapbox, minimum width=2.2cm, right=of real, fill=green!10, draw=green!50!black] (er) {ER-Modell};
+    \node[roadmapbox, minimum width=2.2cm, right=of er, fill=green!10, draw=green!50!black] (rel) {Rel. Schema};
+    \node[roadmapbox, minimum width=2.6cm, right=of rel, fill=IMSOrange!20, draw=IMSOrange] (norm) {Normalisierung};
+    \node[roadmapbox, minimum width=2.2cm, right=of norm] (sql) {SQL-Tabellen};
 
     \draw[roadmaparrow] (real) -- (er) node[midway, above, font=\footnotesize] {\cmark};
     \draw[roadmaparrow] (er) -- (rel) node[midway, above, font=\footnotesize] {\cmark};

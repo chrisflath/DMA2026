@@ -122,8 +122,8 @@
 \begin{center}
 \begin{minipage}{0.7\textwidth}
 \large
-\agendaitem{#1}{1}{1 ~ Rueckblick \& Motivation}
-\agendaitem{#1}{2}{2 ~ Funktionale Abhaengigkeiten}
+\agendaitem{#1}{1}{1 ~ Rückblick \& Motivation}
+\agendaitem{#1}{2}{2 ~ Funktionale Abhängigkeiten}
 \agendaitem{#1}{3}{3 ~ Erste Normalform (1NF)}
 \agendaitem{#1}{4}{4 ~ Zweite Normalform (2NF)}
 \agendaitem{#1}{5}{5 ~ Dritte Normalform (3NF)}
@@ -139,7 +139,7 @@
 \title[DMA 08]{Datenmanagement \& -analyse}
 \subtitle{Vorlesung 8: Normalisierung}
 \author{Prof. Dr. Christoph M. Flath}
-\institute{Lehrstuhl fuer Wirtschaftsinformatik und Business Analytics\\Julius-Maximilians-Universitaet Wuerzburg}
+\institute{Lehrstuhl für Wirtschaftsinformatik und Business Analytics\\Julius-Maximilians-Universität Würzburg}
 \date{Sommersemester 2026}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -150,10 +150,10 @@
     \titlepage
 \end{frame}
 
-% ===== PHASE 1: Rueckblick & Motivation =====
+% ===== PHASE 1: Rückblick & Motivation =====
 \showagenda{1}
 
-\begin{frame}{Rueckblick: Der Weg zu SQL-Tabellen}
+\begin{frame}{Rückblick: Der Weg zu SQL-Tabellen}
 \begin{center}
 \begin{tikzpicture}[node distance=1.5cm]
     \node[roadmapbox] (real) {Reale Welt};
@@ -173,14 +173,14 @@
 \textbf{Letzte Session:}
 \begin{itemize}
     \item ER-Modell $\rightarrow$ Relationales Schema
-    \item Primaer- und Fremdschluessel
+    \item Primär- und Fremdschlüssel
     \item CREATE TABLE mit Constraints
 \end{itemize}
 
 \textbf{Diese Session:}
 \begin{itemize}
     \item Wann ist ein Schema ``gut''?
-    \item Systematische Qualitaetspruefung: \textbf{Normalformen}
+    \item Systematische Qualitätsprüfung: \textbf{Normalformen}
 \end{itemize}
 \end{frame}
 
@@ -190,14 +190,14 @@
 \textbf{Probleme bei schlechtem Design:}
 \begin{itemize}
     \item \textbf{Redundanz} -- Daten mehrfach gespeichert
-    \item \textbf{Aenderungsanomalie} -- Inkonsistenz bei Updates
-    \item \textbf{Einfuegeanomalie} -- Fehlende Daten blockieren
-    \item \textbf{Loeschanomalie} -- Ungewollter Datenverlust
+    \item \textbf{Änderungsanomalie} -- Inkonsistenz bei Updates
+    \item \textbf{Einfügeanomalie} -- Fehlende Daten blockieren
+    \item \textbf{Löschanomalie} -- Ungewollter Datenverlust
 \end{itemize}
 
 \vspace{1em}
 \textbf{Ziel:}\\
-Schema so gestalten, dass diese Probleme \textbf{nicht auftreten koennen}.
+Schema so gestalten, dass diese Probleme \textbf{nicht auftreten können}.
 
 \column{0.5\textwidth}
 \begin{center}
@@ -223,13 +223,13 @@ Normalisierung = systematisches Verfahren zur Beseitigung von Redundanzen
 \rowcolor{IMSBlue!20}
 \textbf{\underline{Best\_Nr}} & \textbf{Kunde} & \textbf{K\_Stadt} & \textbf{Produkt} & \textbf{P\_Preis} & \textbf{Menge} \\
 \hline
-1001 & Mueller & Muenchen & Laptop & 999 & 1 \\
+1001 & Müller & München & Laptop & 999 & 1 \\
 \hline
-1001 & Mueller & Muenchen & Maus & 29 & 2 \\
+1001 & Müller & München & Maus & 29 & 2 \\
 \hline
 1002 & Schmidt & Berlin & Laptop & 999 & 1 \\
 \hline
-1003 & Mueller & Muenchen & Tastatur & 79 & 1 \\
+1003 & Müller & München & Tastatur & 79 & 1 \\
 \hline
 \end{tabular}
 \end{center}
@@ -237,22 +237,22 @@ Normalisierung = systematisches Verfahren zur Beseitigung von Redundanzen
 \vspace{1em}
 \textbf{Probleme:}
 \begin{itemize}
-    \item ``Mueller, Muenchen'' steht \textbf{dreimal} (Redundanz)
+    \item ``Müller, München'' steht \textbf{dreimal} (Redundanz)
     \item ``Laptop, 999'' steht \textbf{zweimal} (Redundanz)
-    \item Wenn Mueller umzieht: \textbf{3 Zeilen} aendern (Aenderungsanomalie)
-    \item Neuer Kunde ohne Bestellung? \textbf{Nicht moeglich} (Einfuegeanomalie)
+    \item Wenn Müller umzieht: \textbf{3 Zeilen} ändern (Änderungsanomalie)
+    \item Neuer Kunde ohne Bestellung? \textbf{Nicht möglich} (Einfügeanomalie)
 \end{itemize}
 \end{frame}
 
 \begin{frame}{Die drei Anomalien im Detail}
 \begin{columns}[T]
 \column{0.33\textwidth}
-\textbf{Aenderungsanomalie:}
+\textbf{Änderungsanomalie:}
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
-    \node[badbox, minimum width=2.5cm, font=\tiny] at (0,2) {Mueller, Muenchen};
-    \node[badbox, minimum width=2.5cm, font=\tiny] at (0,1) {Mueller, Muenchen};
-    \node[goodbox, minimum width=2.5cm, font=\tiny] at (0,0) {Mueller, Berlin};
+    \node[badbox, minimum width=2.5cm, font=\tiny] at (0,2) {Müller, München};
+    \node[badbox, minimum width=2.5cm, font=\tiny] at (0,1) {Müller, München};
+    \node[goodbox, minimum width=2.5cm, font=\tiny] at (0,0) {Müller, Berlin};
     \node[font=\footnotesize, red] at (2.5,1) {Inkonsistent!};
 \end{tikzpicture}
 \end{center}
@@ -260,7 +260,7 @@ Normalisierung = systematisches Verfahren zur Beseitigung von Redundanzen
 Update vergessen $\rightarrow$ Widerspruch in den Daten
 
 \column{0.33\textwidth}
-\textbf{Einfuegeanomalie:}
+\textbf{Einfügeanomalie:}
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
     \node[badbox, minimum width=2.5cm, font=\tiny] at (0,1.5) {Neuer Kunde};
@@ -272,7 +272,7 @@ Update vergessen $\rightarrow$ Widerspruch in den Daten
 Neuer Kunde ohne Bestellung nicht speicherbar
 
 \column{0.33\textwidth}
-\textbf{Loeschanomalie:}
+\textbf{Löschanomalie:}
 \begin{center}
 \begin{tikzpicture}[scale=0.7]
     \node[badbox, minimum width=2.5cm, font=\tiny] at (0,1.5) {Letzte Bestellung};
@@ -282,7 +282,7 @@ Neuer Kunde ohne Bestellung nicht speicherbar
 \end{tikzpicture}
 \end{center}
 \small
-Bestellung loeschen $\rightarrow$ Kundendaten verloren
+Bestellung löschen $\rightarrow$ Kundendaten verloren
 \end{columns}
 
 \vspace{1em}
@@ -306,7 +306,7 @@ Alle Anomalien entstehen durch \textbf{Redundanz} -- die gleiche Information an 
 \hline
 503 & Ben & Bahnweg 7 & SQL Guide & Meier & 10.03.2026 \\
 \hline
-504 & Anna & Hauptstr. 1 & Java Kompakt & Mueller & 12.03.2026 \\
+504 & Anna & Hauptstr. 1 & Java Kompakt & Müller & 12.03.2026 \\
 \hline
 \end{tabular}
 \end{center}
@@ -317,16 +317,16 @@ Alle Anomalien entstehen durch \textbf{Redundanz} -- die gleiche Information an 
     \item Anna's Adresse erscheint \underline{\hspace{2cm}} mal
     \item Der Autor von ``SQL Guide'' erscheint \underline{\hspace{2cm}} mal
     \item Was passiert, wenn Anna umzieht?
-    \item Was passiert, wenn wir die letzte Ausleihe von Ben loeschen?
+    \item Was passiert, wenn wir die letzte Ausleihe von Ben löschen?
 \end{itemize}
 \end{frame}
 
-% ===== PHASE 2: Funktionale Abhaengigkeiten =====
+% ===== PHASE 2: Funktionale Abhängigkeiten =====
 \showagenda{2}
 
-\begin{frame}{Funktionale Abhaengigkeit (FD)}
+\begin{frame}{Funktionale Abhängigkeit (FD)}
 \begin{block}{Definition}
-Ein Attribut B ist \textbf{funktional abhaengig} von A (geschrieben: \fd{A}{B}), wenn zu jedem Wert von A \textbf{genau ein} Wert von B gehoert.
+Ein Attribut B ist \textbf{funktional abhängig} von A (geschrieben: \fd{A}{B}), wenn zu jedem Wert von A \textbf{genau ein} Wert von B gehört.
 \end{block}
 
 \vspace{1em}
@@ -334,7 +334,7 @@ Ein Attribut B ist \textbf{funktional abhaengig} von A (geschrieben: \fd{A}{B}),
 \begin{itemize}
     \item \fd{Matrikelnr}{Studentenname} \quad {\color{green!70!black}\cmark}
     \item \fd{PLZ}{Ort} \quad {\color{green!70!black}\cmark} (in Deutschland)
-    \item \fd{Ort}{PLZ} \quad {\color{red}\xmark} (Muenchen hat viele PLZ)
+    \item \fd{Ort}{PLZ} \quad {\color{red}\xmark} (München hat viele PLZ)
     \item \fd{ISBN}{Buchtitel} \quad {\color{green!70!black}\cmark}
 \end{itemize}
 
@@ -353,7 +353,7 @@ Ein Attribut B ist \textbf{funktional abhaengig} von A (geschrieben: \fd{A}{B}),
 \end{frame}
 
 \begin{frame}{FD-Notation und Schreibweisen}
-\textbf{Verschiedene Notationen (alle aequivalent):}
+\textbf{Verschiedene Notationen (alle äquivalent):}
 
 \vspace{1em}
 \begin{center}
@@ -366,7 +366,7 @@ Ein Attribut B ist \textbf{funktional abhaengig} von A (geschrieben: \fd{A}{B}),
 \hline
 A $\rightarrow$ B & A bestimmt B \\
 \hline
-B ist FD von A & B haengt funktional von A ab \\
+B ist FD von A & B hängt funktional von A ab \\
 \hline
 \fd{A}{B, C} & A bestimmt sowohl B als auch C \\
 \hline
@@ -379,7 +379,7 @@ B ist FD von A & B haengt funktional von A ab \\
 \textbf{Wichtig:}
 \begin{itemize}
     \item \fd{A}{B} bedeutet \textbf{nicht} \fd{B}{A}
-    \item Der Pfeil zeigt die \textbf{Richtung} der Abhaengigkeit
+    \item Der Pfeil zeigt die \textbf{Richtung} der Abhängigkeit
     \item Die linke Seite heisst \textbf{Determinante}
 \end{itemize}
 \end{frame}
@@ -391,9 +391,9 @@ B ist FD von A & B haengt funktional von A ab \\
 \end{center}
 
 \vspace{1em}
-\textbf{Funktionale Abhaengigkeiten:}
+\textbf{Funktionale Abhängigkeiten:}
 \begin{itemize}
-    \item \fd{Best\_Nr, Produkt}{Menge} \quad (Schluessel!)
+    \item \fd{Best\_Nr, Produkt}{Menge} \quad (Schlüssel!)
     \item \fd{Best\_Nr}{Kunde, K\_Stadt} \quad (Bestellung $\rightarrow$ Kunde)
     \item \fd{Kunde}{K\_Stadt} \quad (Kunde $\rightarrow$ Stadt)
     \item \fd{Produkt}{P\_Preis} \quad (Produkt $\rightarrow$ Preis)
@@ -401,12 +401,12 @@ B ist FD von A & B haengt funktional von A ab \\
 
 \vspace{1em}
 \begin{alertblock}{Problem}
-Es gibt FDs, die \textbf{nicht vom gesamten Schluessel} abhaengen!\\
-Das ist die Ursache fuer Redundanz.
+Es gibt FDs, die \textbf{nicht vom gesamten Schlüssel} abhängen!\\
+Das ist die Ursache für Redundanz.
 \end{alertblock}
 \end{frame}
 
-\begin{frame}{Uebung: FDs identifizieren}
+\begin{frame}{Übung: FDs identifizieren}
 \begin{center}
 \small
 \textbf{Mitarbeiter}(\underline{MA\_Nr}, Name, Abteilung, Abt\_Leiter, Projekt, Stunden)
@@ -437,19 +437,19 @@ Das ist die Ursache fuer Redundanz.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Loesung: FDs identifizieren}
+\begin{frame}{Lösung: FDs identifizieren}
 \begin{center}
 \small
 \textbf{Mitarbeiter}(\underline{MA\_Nr, Projekt}, Name, Abteilung, Abt\_Leiter, Stunden)
 \end{center}
 
 \vspace{1em}
-\textbf{Funktionale Abhaengigkeiten:}
+\textbf{Funktionale Abhängigkeiten:}
 \begin{itemize}
     \item[\cmark] \fd{MA\_Nr}{Name} -- Ein MA hat genau einen Namen
     \item[\cmark] \fd{MA\_Nr}{Abteilung} -- Ein MA ist in genau einer Abteilung
     \item[\cmark] \fd{Abteilung}{Abt\_Leiter} -- Jede Abteilung hat einen Leiter
-    \item[\cmark] \fd{MA\_Nr, Projekt}{Stunden} -- Schluessel-FD
+    \item[\cmark] \fd{MA\_Nr, Projekt}{Stunden} -- Schlüssel-FD
     \item[\xmark] \fd{Projekt}{Stunden} -- Falsch! Verschiedene MAs arbeiten unterschiedlich lange
 \end{itemize}
 
@@ -468,29 +468,29 @@ Das ist die Ursache fuer Redundanz.
 \end{center}
 \end{frame}
 
-\begin{frame}{Volle vs. Partielle Abhaengigkeit}
+\begin{frame}{Volle vs. Partielle Abhängigkeit}
 \begin{columns}[T]
 \column{0.5\textwidth}
-\textbf{Volle funktionale Abhaengigkeit:}
+\textbf{Volle funktionale Abhängigkeit:}
 
-B ist \textbf{voll} funktional abhaengig von A, wenn B von A abhaengt, aber \textbf{nicht} von einer echten Teilmenge von A.
+B ist \textbf{voll} funktional abhängig von A, wenn B von A abhängt, aber \textbf{nicht} von einer echten Teilmenge von A.
 
 \vspace{1em}
 \textbf{Beispiel:}\\
 \fd{Best\_Nr, Produkt}{Menge}
 
-$\rightarrow$ Menge haengt vom \textbf{gesamten} Schluessel ab.
+$\rightarrow$ Menge hängt vom \textbf{gesamten} Schlüssel ab.
 
 \column{0.5\textwidth}
-\textbf{Partielle Abhaengigkeit:}
+\textbf{Partielle Abhängigkeit:}
 
-B haengt nur von einem \textbf{Teil} des Schluessels ab.
+B hängt nur von einem \textbf{Teil} des Schlüssels ab.
 
 \vspace{1em}
 \textbf{Beispiel:}\\
 \fd{Best\_Nr}{Kunde}
 
-$\rightarrow$ Kunde haengt nur von Best\_Nr ab, nicht von Produkt.
+$\rightarrow$ Kunde hängt nur von Best\_Nr ab, nicht von Produkt.
 
 \vspace{1em}
 {\color{red}\textbf{Das verursacht Redundanz!}}
@@ -514,7 +514,7 @@ $\rightarrow$ Kunde haengt nur von Best\_Nr ab, nicht von Produkt.
 \textbf{Regeln zur Herleitung von FDs:}
 
 \vspace{1em}
-\begin{block}{1. Reflexivitaet}
+\begin{block}{1. Reflexivität}
 Wenn B $\subseteq$ A, dann gilt \fd{A}{B}
 
 \vspace{0.3em}
@@ -528,7 +528,7 @@ Wenn \fd{A}{B}, dann gilt auch \fd{A, C}{B, C}
 \small Beispiel: Aus \fd{MA\_Nr}{Name} folgt \fd{MA\_Nr, Projekt}{Name, Projekt}
 \end{block}
 
-\begin{block}{3. Transitivitaet}
+\begin{block}{3. Transitivität}
 Wenn \fd{A}{B} und \fd{B}{C}, dann gilt \fd{A}{C}
 
 \vspace{0.3em}
@@ -536,11 +536,11 @@ Wenn \fd{A}{B} und \fd{B}{C}, dann gilt \fd{A}{C}
 \end{block}
 
 \vspace{0.5em}
-\textbf{Diese drei Axiome sind \textit{vollstaendig} -- alle ableitbaren FDs lassen sich damit herleiten!}
+\textbf{Diese drei Axiome sind \textit{vollständig} -- alle ableitbaren FDs lassen sich damit herleiten!}
 \end{frame}
 
 \begin{frame}{Abgeleitete Regeln aus Armstrong's Axiomen}
-\textbf{Nuetzliche Zusatzregeln (ableitbar aus den Axiomen):}
+\textbf{Nützliche Zusatzregeln (ableitbar aus den Axiomen):}
 
 \vspace{1em}
 \begin{columns}[T]
@@ -566,7 +566,7 @@ $\Rightarrow$ \fd{MA\_Nr}{Name} und \fd{MA\_Nr}{Abteilung}
 \end{columns}
 
 \vspace{1em}
-\begin{alertblock}{Pseudotransitivitaet}
+\begin{alertblock}{Pseudotransitivität}
 Wenn \fd{A}{B} und \fd{B, C}{D}, dann \fd{A, C}{D}
 \end{alertblock}
 \end{frame}
@@ -580,19 +580,19 @@ Wenn \fd{A}{B} und \fd{B, C}{D}, dann \fd{A, C}{D}
 \end{itemize}
 
 \vspace{1em}
-\textbf{Welche FDs koennen abgeleitet werden?}
+\textbf{Welche FDs können abgeleitet werden?}
 
 \vspace{0.5em}
 \begin{tabular}{|l|c|l|}
 \hline
 \rowcolor{IMSBlue!20}
-\textbf{FD} & \textbf{Ableitbar?} & \textbf{Begruendung} \\
+\textbf{FD} & \textbf{Ableitbar?} & \textbf{Begründung} \\
 \hline
-\fd{A}{C} & \pause \cmark & Transitivitaet: A$\rightarrow$B$\rightarrow$C \\
+\fd{A}{C} & \pause \cmark & Transitivität: A$\rightarrow$B$\rightarrow$C \\
 \hline
 \fd{A, D}{E} & \pause \cmark & Pseudotrans.: A$\rightarrow$C, CD$\rightarrow$E \\
 \hline
-\fd{B}{E} & \pause \xmark & D fehlt fuer C,D$\rightarrow$E \\
+\fd{B}{E} & \pause \xmark & D fehlt für C,D$\rightarrow$E \\
 \hline
 \fd{A}{B, C} & \pause \cmark & Vereinigung: A$\rightarrow$B, A$\rightarrow$C \\
 \hline
@@ -606,7 +606,7 @@ Wenn \fd{A}{B} und \fd{B, C}{D}, dann \fd{A, C}{D}
 \vfill
 \begin{center}
 {\Huge\color{IMSOrange} Hands-on}\\[1em]
-{\Large Funktionale Abhaengigkeiten erkennen}\\[2em]
+{\Large Funktionale Abhängigkeiten erkennen}\\[2em]
 {\large\ttfamily marimo: 08-normalisierung.py}\\[1em]
 {\normalsize Aufgabe 8.1: FDs aus Beispieldaten ableiten}
 \end{center}
@@ -640,7 +640,7 @@ Ben & DMA \\
 \end{tabular}
 \end{center}
 
-{\color{red}\xmark} ``Kurse'' enthaelt eine \textbf{Liste}
+{\color{red}\xmark} ``Kurse'' enthält eine \textbf{Liste}
 
 \column{0.5\textwidth}
 \textbf{In 1NF:}
@@ -662,26 +662,26 @@ Ben & DMA \\
 \end{tabular}
 \end{center}
 
-{\color{green!70!black}\cmark} Jede Zelle enthaelt \textbf{einen} Wert
+{\color{green!70!black}\cmark} Jede Zelle enthält \textbf{einen} Wert
 \end{columns}
 
 \vspace{1em}
 \begin{alertblock}{Merke}
-1NF ist die \textbf{Mindestanforderung} fuer relationale Datenbanken!
+1NF ist die \textbf{Mindestanforderung} für relationale Datenbanken!
 \end{alertblock}
 \end{frame}
 
 \begin{frame}{1NF-Verletzungen erkennen}
 \textbf{Typische Anzeichen:}
 \begin{itemize}
-    \item Komma-separierte Werte: ``Muenchen, Berlin, Hamburg''
+    \item Komma-separierte Werte: ``München, Berlin, Hamburg''
     \item Nummerierte Spalten: Telefon1, Telefon2, Telefon3
     \item JSON/XML in einer Spalte
     \item ``Wiederholungsgruppen''
 \end{itemize}
 
 \vspace{1em}
-\textbf{Loesung:}
+\textbf{Lösung:}
 \begin{enumerate}
     \item Wiederholende Werte in \textbf{separate Zeilen} aufteilen
     \item Oder: \textbf{Neue Tabelle} erstellen (bei 1:N oder M:N)
@@ -695,7 +695,7 @@ $\downarrow$\\
 \end{exampleblock}
 \end{frame}
 
-\begin{frame}{1NF: Schritt-fuer-Schritt Beispiel}
+\begin{frame}{1NF: Schritt-für-Schritt Beispiel}
 \textbf{Ausgangstabelle (nicht 1NF):}
 \begin{center}
 \small
@@ -704,9 +704,9 @@ $\downarrow$\\
 \rowcolor{red!20}
 \textbf{\underline{Kurs\_ID}} & \textbf{Kursname} & \textbf{Dozenten} \\
 \hline
-DMA01 & Datenmanagement & Flath, Mueller \\
+DMA01 & Datenmanagement & Flath, Müller \\
 \hline
-BWL01 & Einfuehrung BWL & Schmidt \\
+BWL01 & Einführung BWL & Schmidt \\
 \hline
 \end{tabular}
 \end{center}
@@ -725,15 +725,15 @@ BWL01 & Einfuehrung BWL & Schmidt \\
 \hline
 DMA01 & Datenmanagement & Flath \\
 \hline
-DMA01 & Datenmanagement & Mueller \\
+DMA01 & Datenmanagement & Müller \\
 \hline
-BWL01 & Einfuehrung BWL & Schmidt \\
+BWL01 & Einführung BWL & Schmidt \\
 \hline
 \end{tabular}
 \end{center}
 
 \vspace{0.5em}
-\textbf{Hinweis:} Der Schluessel hat sich geaendert! Jetzt: (Kurs\_ID, Dozent)
+\textbf{Hinweis:} Der Schlüssel hat sich geändert! Jetzt: (Kurs\_ID, Dozent)
 \end{frame}
 
 \begin{frame}{Quiz: Welche Tabelle ist in 1NF?}
@@ -804,11 +804,11 @@ BWL01 & Einfuehrung BWL & Schmidt \\
 
 \begin{frame}{Zweite Normalform (2NF)}
 \begin{block}{Definition: 2NF}
-Eine Relation ist in \textbf{2NF}, wenn sie in 1NF ist und jedes Nicht-Schluesselattribut \textbf{voll funktional abhaengig} vom \textbf{gesamten} Primaerschluessel ist.
+Eine Relation ist in \textbf{2NF}, wenn sie in 1NF ist und jedes Nicht-Schlüsselattribut \textbf{voll funktional abhängig} vom \textbf{gesamten} Primärschlüssel ist.
 \end{block}
 
 \vspace{1em}
-\textbf{Anders gesagt:} Keine partiellen Abhaengigkeiten!
+\textbf{Anders gesagt:} Keine partiellen Abhängigkeiten!
 
 \vspace{1em}
 \begin{center}
@@ -817,14 +817,14 @@ Eine Relation ist in \textbf{2NF}, wenn sie in 1NF ist und jedes Nicht-Schluesse
     \node[nfbox, fill=IMSBlue!20] (2nf) at (3.5,0) {2NF};
     \node[nfbox, fill=IMSBlue!30] (3nf) at (7,0) {3NF};
 
-    \draw[roadmaparrow] (1nf.east) -- (2nf.west) node[midway, above, font=\footnotesize] {+ voll abhaengig};
+    \draw[roadmaparrow] (1nf.east) -- (2nf.west) node[midway, above, font=\footnotesize] {+ voll abhängig};
     \draw[roadmaparrow] (2nf.east) -- (3nf.west) node[midway, above, font=\footnotesize] {+ nicht transitiv};
 \end{tikzpicture}
 \end{center}
 
 \vspace{1em}
 \begin{alertblock}{Wichtig}
-2NF ist nur relevant bei \textbf{zusammengesetzten} Primaerschluesseln!\\
+2NF ist nur relevant bei \textbf{zusammengesetzten} Primärschlüsseln!\\
 Bei einfachem PK ist eine 1NF-Relation automatisch in 2NF.
 \end{alertblock}
 \end{frame}
@@ -836,9 +836,9 @@ Bei einfachem PK ist eine 1NF-Relation automatisch in 2NF.
 \end{center}
 
 \vspace{1em}
-\textbf{Funktionale Abhaengigkeiten:}
+\textbf{Funktionale Abhängigkeiten:}
 \begin{itemize}
-    \item \fd{Best\_Nr, Produkt}{Menge} \quad {\color{green!70!black}\cmark} voll abhaengig
+    \item \fd{Best\_Nr, Produkt}{Menge} \quad {\color{green!70!black}\cmark} voll abhängig
     \item \fd{Best\_Nr}{Kunde, K\_Stadt} \quad {\color{red}\xmark} \textbf{partiell!}
     \item \fd{Produkt}{P\_Preis} \quad {\color{red}\xmark} \textbf{partiell!}
 \end{itemize}
@@ -859,7 +859,7 @@ Bei einfachem PK ist eine 1NF-Relation automatisch in 2NF.
 \end{frame}
 
 \begin{frame}{2NF herstellen: Zerlegung}
-\textbf{Loesung:} Attribute, die nur von einem Teil des Schluessels abhaengen, in \textbf{eigene Tabellen} auslagern.
+\textbf{Lösung:} Attribute, die nur von einem Teil des Schlüssels abhängen, in \textbf{eigene Tabellen} auslagern.
 
 \vspace{1em}
 \begin{center}
@@ -879,17 +879,17 @@ $\Downarrow$ Zerlegung
 
 \vspace{1em}
 \begin{block}{Ergebnis}
-Jede Tabelle hat nur noch Attribute, die \textbf{voll} vom Schluessel abhaengen.
+Jede Tabelle hat nur noch Attribute, die \textbf{voll} vom Schlüssel abhängen.
 \end{block}
 \end{frame}
 
-\begin{frame}{2NF: Schritt-fuer-Schritt Walkthrough}
+\begin{frame}{2NF: Schritt-für-Schritt Walkthrough}
 \textbf{Ausgangstabelle:} Vorlesung(\underline{VL\_Nr, Dozent\_ID}, VL\_Name, Raum, Dozent\_Name)
 
 \vspace{0.5em}
 \textbf{Schritt 1: FDs identifizieren}
 \begin{itemize}
-    \item \fd{VL\_Nr, Dozent\_ID}{Raum} -- voll (Dozent kann unterschiedliche Raeume haben)
+    \item \fd{VL\_Nr, Dozent\_ID}{Raum} -- voll (Dozent kann unterschiedliche Räume haben)
     \item \fd{VL\_Nr}{VL\_Name} -- \textbf{partiell!}
     \item \fd{Dozent\_ID}{Dozent\_Name} -- \textbf{partiell!}
 \end{itemize}
@@ -897,8 +897,8 @@ Jede Tabelle hat nur noch Attribute, die \textbf{voll} vom Schluessel abhaengen.
 \vspace{0.5em}
 \textbf{Schritt 2: Partielle FDs auslagern}
 \begin{itemize}
-    \item Neue Tabelle fuer \fd{VL\_Nr}{VL\_Name}
-    \item Neue Tabelle fuer \fd{Dozent\_ID}{Dozent\_Name}
+    \item Neue Tabelle für \fd{VL\_Nr}{VL\_Name}
+    \item Neue Tabelle für \fd{Dozent\_ID}{Dozent\_Name}
 \end{itemize}
 
 \vspace{0.5em}
@@ -910,9 +910,9 @@ Jede Tabelle hat nur noch Attribute, die \textbf{voll} vom Schluessel abhaengen.
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Haeufiger Fehler: 2NF bei einfachem Schluessel}
+\begin{frame}{Häufiger Fehler: 2NF bei einfachem Schlüssel}
 \begin{alertblock}{Achtung!}
-Bei einem \textbf{einfachen} (nicht zusammengesetzten) Primaerschluessel gibt es \textbf{keine partiellen Abhaengigkeiten}.
+Bei einem \textbf{einfachen} (nicht zusammengesetzten) Primärschlüssel gibt es \textbf{keine partiellen Abhängigkeiten}.
 \end{alertblock}
 
 \vspace{1em}
@@ -921,7 +921,7 @@ Bei einem \textbf{einfachen} (nicht zusammengesetzten) Primaerschluessel gibt es
 
 \vspace{0.5em}
 \begin{itemize}
-    \item \fd{Kunden\_ID}{Name} -- voll (Schluessel hat nur 1 Attribut)
+    \item \fd{Kunden\_ID}{Name} -- voll (Schlüssel hat nur 1 Attribut)
     \item \fd{Kunden\_ID}{Stadt} -- voll
     \item \fd{Kunden\_ID}{PLZ} -- voll
 \end{itemize}
@@ -930,7 +930,7 @@ Bei einem \textbf{einfachen} (nicht zusammengesetzten) Primaerschluessel gibt es
 $\Rightarrow$ Diese Relation ist \textbf{automatisch in 2NF}!
 
 \vspace{1em}
-\textbf{Aber:} Es koennte trotzdem eine 3NF-Verletzung geben (transitive Abhaengigkeit: \fd{PLZ}{Stadt})
+\textbf{Aber:} Es könnte trotzdem eine 3NF-Verletzung geben (transitive Abhängigkeit: \fd{PLZ}{Stadt})
 \end{frame}
 
 \begin{frame}{Quiz: Welche NF?}
@@ -957,7 +957,7 @@ $\Rightarrow$ Diese Relation ist \textbf{automatisch in 2NF}!
 
 \pause
 \vspace{0.5em}
-\textbf{Antwort: B)} -- Partielle Abhaengigkeiten vorhanden (Hotel\_Name, Gast\_Name)
+\textbf{Antwort: B)} -- Partielle Abhängigkeiten vorhanden (Hotel\_Name, Gast\_Name)
 \end{frame}
 
 % ===== Hands-on =====
@@ -991,12 +991,12 @@ $\Rightarrow$ Diese Relation ist \textbf{automatisch in 2NF}!
 
 \begin{frame}{Dritte Normalform (3NF)}
 \begin{block}{Definition: 3NF}
-Eine Relation ist in \textbf{3NF}, wenn sie in 2NF ist und kein Nicht-Schluesselattribut \textbf{transitiv} vom Primaerschluessel abhaengt.
+Eine Relation ist in \textbf{3NF}, wenn sie in 2NF ist und kein Nicht-Schlüsselattribut \textbf{transitiv} vom Primärschlüssel abhängt.
 \end{block}
 
 \vspace{1em}
-\textbf{Transitive Abhaengigkeit:}\\
-\fd{A}{B} und \fd{B}{C} $\Rightarrow$ C haengt \textbf{transitiv} von A ab.
+\textbf{Transitive Abhängigkeit:}\\
+\fd{A}{B} und \fd{B}{C} $\Rightarrow$ C hängt \textbf{transitiv} von A ab.
 
 \vspace{1em}
 \begin{center}
@@ -1022,7 +1022,7 @@ Eine Relation ist in \textbf{3NF}, wenn sie in 2NF ist und kein Nicht-Schluessel
 \end{center}
 
 \vspace{1em}
-\textbf{Funktionale Abhaengigkeiten:}
+\textbf{Funktionale Abhängigkeiten:}
 \begin{itemize}
     \item \fd{Best\_Nr}{Kunde} \quad {\color{green!70!black}\cmark}
     \item \fd{Kunde}{K\_Stadt} \quad (Kunde bestimmt Stadt)
@@ -1043,11 +1043,11 @@ Eine Relation ist in \textbf{3NF}, wenn sie in 2NF ist und kein Nicht-Schluessel
 \end{center}
 
 \vspace{1em}
-\textbf{Redundanz:} Wenn Mueller 5 Bestellungen hat, steht ``Muenchen'' 5x in der Tabelle.
+\textbf{Redundanz:} Wenn Müller 5 Bestellungen hat, steht ``München'' 5x in der Tabelle.
 \end{frame}
 
 \begin{frame}{3NF herstellen: Zerlegung}
-\textbf{Loesung:} Die transitive Abhaengigkeit in eine \textbf{eigene Tabelle} auslagern.
+\textbf{Lösung:} Die transitive Abhängigkeit in eine \textbf{eigene Tabelle} auslagern.
 
 \vspace{1em}
 \begin{center}
@@ -1066,11 +1066,11 @@ $\Downarrow$ Zerlegung
 
 \vspace{1em}
 \begin{block}{Ergebnis}
-Jedes Nicht-Schluesselattribut haengt \textbf{direkt} (nicht transitiv) vom Schluessel ab.
+Jedes Nicht-Schlüsselattribut hängt \textbf{direkt} (nicht transitiv) vom Schlüssel ab.
 \end{block}
 \end{frame}
 
-\begin{frame}{3NF: Schritt-fuer-Schritt Walkthrough}
+\begin{frame}{3NF: Schritt-für-Schritt Walkthrough}
 \textbf{Ausgangstabelle (2NF):} Mitarbeiter(\underline{MA\_Nr}, Name, Abt\_ID, Abt\_Name, Abt\_Ort)
 
 \vspace{0.5em}
@@ -1094,7 +1094,7 @@ Jedes Nicht-Schluesselattribut haengt \textbf{direkt} (nicht transitiv) vom Schl
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Beispiel: Universitaetssystem}
+\begin{frame}{Beispiel: Universitätssystem}
 \textbf{Ausgangstabelle:}\\
 \small Einschreibung(\underline{Matrikel}, Student\_Name, \underline{Kurs\_ID}, Kurs\_Name, Dozent\_ID, Dozent\_Name, Note)
 
@@ -1110,13 +1110,13 @@ Jedes Nicht-Schluesselattribut haengt \textbf{direkt} (nicht transitiv) vom Schl
 \vspace{0.5em}
 \textbf{Probleme:}
 \begin{itemize}
-    \item Partielle Abhaengigkeit: Student\_Name von Matrikel (nicht 2NF)
-    \item Partielle Abhaengigkeit: Kurs\_Name, Dozent\_ID von Kurs\_ID (nicht 2NF)
-    \item Transitive Abhaengigkeit: Dozent\_Name ueber Dozent\_ID (nicht 3NF)
+    \item Partielle Abhängigkeit: Student\_Name von Matrikel (nicht 2NF)
+    \item Partielle Abhängigkeit: Kurs\_Name, Dozent\_ID von Kurs\_ID (nicht 2NF)
+    \item Transitive Abhängigkeit: Dozent\_Name über Dozent\_ID (nicht 3NF)
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Beispiel: Universitaetssystem -- Loesung}
+\begin{frame}{Beispiel: Universitätssystem -- Lösung}
 \textbf{Normalisierte Tabellen (3NF):}
 
 \vspace{1em}
@@ -1139,7 +1139,7 @@ Jedes Nicht-Schluesselattribut haengt \textbf{direkt} (nicht transitiv) vom Schl
     \item Studentendaten nur einmal gespeichert
     \item Kursdaten nur einmal gespeichert
     \item Dozentendaten nur einmal gespeichert
-    \item Keine Anomalien mehr moeglich!
+    \item Keine Anomalien mehr möglich!
 \end{itemize}
 \end{frame}
 
@@ -1191,36 +1191,36 @@ Mitarbeiter(\underline{MA\_ID}, Name, Gehalt) & \pause 3NF \\
 \end{tabular}
 
 \vspace{1em}
-\textbf{Erklaerungen:}
+\textbf{Erklärungen:}
 \begin{itemize}
     \item Film: \fd{Genre}{Genre\_Beschreibung} ist transitiv
     \item Buch: Wiederholungsgruppe (mehrere Autor-Spalten)
-    \item Bestellung: Preis haengt nur von Artikel ab (partiell)
-    \item Mitarbeiter: Alle Attribute haengen direkt vom Schluessel ab
+    \item Bestellung: Preis hängt nur von Artikel ab (partiell)
+    \item Mitarbeiter: Alle Attribute hängen direkt vom Schlüssel ab
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Haeufige Fehler bei der Normalisierung}
+\begin{frame}{Häufige Fehler bei der Normalisierung}
 \begin{columns}[T]
 \column{0.5\textwidth}
-\textbf{Fehler 1: FDs uebersehen}
+\textbf{Fehler 1: FDs übersehen}
 \begin{itemize}
-    \item Alle Geschaeftsregeln beachten!
+    \item Alle Geschäftsregeln beachten!
     \item ``Jeder Kunde hat genau eine Adresse'' $\rightarrow$ FD
 \end{itemize}
 
 \vspace{1em}
-\textbf{Fehler 2: Schluessel falsch bestimmt}
+\textbf{Fehler 2: Schlüssel falsch bestimmt}
 \begin{itemize}
-    \item Schluessel muss minimal sein
+    \item Schlüssel muss minimal sein
     \item Alle Attribute bestimmen
 \end{itemize}
 
 \column{0.5\textwidth}
-\textbf{Fehler 3: Zu frueh aufhoeren}
+\textbf{Fehler 3: Zu früh aufhören}
 \begin{itemize}
     \item 2NF reicht nicht!
-    \item Transitive FDs pruefen
+    \item Transitive FDs prüfen
 \end{itemize}
 
 \vspace{1em}
@@ -1242,13 +1242,13 @@ Bei Unsicherheit: Beispieldaten durchspielen! Tritt Redundanz auf?
 
 \begin{frame}{Boyce-Codd-Normalform (BCNF)}
 \begin{block}{Definition: BCNF}
-Eine Relation ist in \textbf{BCNF}, wenn fuer jede nicht-triviale FD \fd{X}{Y} gilt: X ist ein \textbf{Superschluessel}.
+Eine Relation ist in \textbf{BCNF}, wenn für jede nicht-triviale FD \fd{X}{Y} gilt: X ist ein \textbf{Superschlüssel}.
 \end{block}
 
 \vspace{1em}
 \textbf{BCNF ist strenger als 3NF:}
 \begin{itemize}
-    \item 3NF erlaubt: Schluesselattribut haengt von Nicht-Schluessel ab
+    \item 3NF erlaubt: Schlüsselattribut hängt von Nicht-Schlüssel ab
     \item BCNF verbietet das
 \end{itemize}
 
@@ -1257,12 +1257,12 @@ Eine Relation ist in \textbf{BCNF}, wenn fuer jede nicht-triviale FD \fd{X}{Y} g
 \begin{itemize}
     \item Die meisten 3NF-Relationen sind auch BCNF
     \item BCNF kann manchmal nicht verlustfrei erreicht werden
-    \item Fuer Klausuren: 3NF reicht meist!
+    \item Für Klausuren: 3NF reicht meist!
 \end{itemize}
 
 \vspace{1em}
 \begin{alertblock}{Merksatz}
-``Jedes Attribut haengt vom Schluessel ab, vom ganzen Schluessel, und von nichts ausser dem Schluessel.'' (Codd)
+``Jedes Attribut hängt vom Schlüssel ab, vom ganzen Schlüssel, und von nichts ausser dem Schlüssel.'' (Codd)
 \end{alertblock}
 \end{frame}
 
@@ -1272,27 +1272,27 @@ Eine Relation ist in \textbf{BCNF}, wenn fuer jede nicht-triviale FD \fd{X}{Y} g
 \vspace{0.5em}
 \textbf{FDs:}
 \begin{itemize}
-    \item \fd{Student, Fach}{Dozent} -- Schluessel-FD
+    \item \fd{Student, Fach}{Dozent} -- Schlüssel-FD
     \item \fd{Dozent}{Fach} -- Jeder Dozent unterrichtet nur ein Fach
 \end{itemize}
 
 \vspace{1em}
-\textbf{3NF-Pruefung:}
+\textbf{3NF-Prüfung:}
 \begin{itemize}
-    \item Keine partiellen Abhaengigkeiten (Dozent haengt vom ganzen Schluessel ab)
-    \item Keine transitiven Abhaengigkeiten (Dozent ist kein Nicht-Schluesselattribut in der zweiten FD)
+    \item Keine partiellen Abhängigkeiten (Dozent hängt vom ganzen Schlüssel ab)
+    \item Keine transitiven Abhängigkeiten (Dozent ist kein Nicht-Schlüsselattribut in der zweiten FD)
     \item $\Rightarrow$ \cmark{} Ist in 3NF!
 \end{itemize}
 
 \vspace{0.5em}
-\textbf{BCNF-Pruefung:}
+\textbf{BCNF-Prüfung:}
 \begin{itemize}
-    \item \fd{Dozent}{Fach} -- Dozent ist kein Superschluessel!
+    \item \fd{Dozent}{Fach} -- Dozent ist kein Superschlüssel!
     \item $\Rightarrow$ \xmark{} Ist NICHT in BCNF!
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Normalformen: Uebersicht}
+\begin{frame}{Normalformen: Übersicht}
 \begin{center}
 \begin{tikzpicture}[scale=0.9]
     % Nested boxes showing NF hierarchy (BCNF ⊂ 3NF ⊂ 2NF ⊂ 1NF)
@@ -1322,11 +1322,11 @@ Eine Relation ist in \textbf{BCNF}, wenn fuer jede nicht-triviale FD \fd{X}{Y} g
 \hline
 1NF & Atomare Werte \\
 \hline
-2NF & + Keine partiellen Abhaengigkeiten \\
+2NF & + Keine partiellen Abhängigkeiten \\
 \hline
-3NF & + Keine transitiven Abhaengigkeiten \\
+3NF & + Keine transitiven Abhängigkeiten \\
 \hline
-BCNF & + Jede Determinante ist Superschluessel \\
+BCNF & + Jede Determinante ist Superschlüssel \\
 \hline
 \end{tabular}
 \end{center}
@@ -1337,28 +1337,28 @@ BCNF & + Jede Determinante ist Superschluessel \\
 
 \vspace{1em}
 \begin{enumerate}
-    \item \textbf{1NF pruefen:}
+    \item \textbf{1NF prüfen:}
     \begin{itemize}
         \item Sind alle Werte atomar? (Keine Listen, keine Wiederholungsgruppen)
     \end{itemize}
 
     \vspace{0.5em}
-    \item \textbf{Schluessel bestimmen:}
+    \item \textbf{Schlüssel bestimmen:}
     \begin{itemize}
         \item Welche Attributkombination bestimmt alle anderen?
     \end{itemize}
 
     \vspace{0.5em}
-    \item \textbf{2NF pruefen:} (nur bei zusammengesetztem Schluessel)
+    \item \textbf{2NF prüfen:} (nur bei zusammengesetztem Schlüssel)
     \begin{itemize}
-        \item Haengen alle Nicht-Schluesselattribute vom \textit{ganzen} Schluessel ab?
+        \item Hängen alle Nicht-Schlüsselattribute vom \textit{ganzen} Schlüssel ab?
     \end{itemize}
 
     \vspace{0.5em}
-    \item \textbf{3NF pruefen:}
+    \item \textbf{3NF prüfen:}
     \begin{itemize}
-        \item Gibt es FDs zwischen Nicht-Schluesselattributen?
-        \item Falls ja: transitive Abhaengigkeit!
+        \item Gibt es FDs zwischen Nicht-Schlüsselattributen?
+        \item Falls ja: transitive Abhängigkeit!
     \end{itemize}
 \end{enumerate}
 \end{frame}
@@ -1366,25 +1366,25 @@ BCNF & + Jede Determinante ist Superschluessel \\
 \begin{frame}{Denormalisierung: Wann und Warum?}
 \textbf{Normalisierung hat auch Nachteile:}
 \begin{itemize}
-    \item Viele Tabellen $\rightarrow$ viele JOINs noetig
-    \item JOINs koennen \textbf{Performance kosten}
+    \item Viele Tabellen $\rightarrow$ viele JOINs nötig
+    \item JOINs können \textbf{Performance kosten}
     \item Komplexere Abfragen
 \end{itemize}
 
 \vspace{1em}
-\textbf{Denormalisierung = bewusste Einfuehrung von Redundanz}
+\textbf{Denormalisierung = bewusste Einführung von Redundanz}
 
 \vspace{1em}
 \textbf{Wann sinnvoll?}
 \begin{itemize}
     \item Lesende Zugriffe dominieren (wenig Updates)
     \item Performance kritisch (z.B. Reporting, Data Warehouse)
-    \item Daten aendern sich selten
+    \item Daten ändern sich selten
 \end{itemize}
 
 \vspace{1em}
 \begin{alertblock}{Wichtig}
-Denormalisierung ist eine \textbf{bewusste Entscheidung} nach Abwaegung!\\
+Denormalisierung ist eine \textbf{bewusste Entscheidung} nach Abwägung!\\
 Erst normalisieren, dann gezielt denormalisieren.
 \end{alertblock}
 \end{frame}
@@ -1400,15 +1400,15 @@ Erst normalisieren, dann gezielt denormalisieren.
     \item Statt: SUM(Positionen) bei jeder Abfrage
     \item Speichern: Bestellung.Gesamtsumme
     \item Vorteil: Schneller Zugriff
-    \item Nachteil: Bei Aenderung nachfuehren
+    \item Nachteil: Bei Änderung nachführen
 \end{itemize}
 
 \column{0.5\textwidth}
-\textbf{2. Haeufige JOINs vorwegnehmen:}
+\textbf{2. Häufige JOINs vorwegnehmen:}
 \begin{itemize}
     \item Statt: Bestellung JOIN Kunde
     \item Speichern: Kundenname in Bestellung
-    \item Vorteil: Kein JOIN noetig
+    \item Vorteil: Kein JOIN nötig
     \item Nachteil: Redundanz
 \end{itemize}
 \end{columns}
@@ -1427,15 +1427,15 @@ $\rightarrow$ ``Star Schema'', ``Snowflake Schema''
 \rowcolor{IMSBlue!20}
 \textbf{Situation} & \textbf{Empfehlung} & \textbf{Grund} \\
 \hline
-OLTP-System & 3NF (mindestens) & Datenintegritaet \\
+OLTP-System & 3NF (mindestens) & Datenintegrität \\
 \hline
 Data Warehouse & 1NF/2NF & Leseperformance \\
 \hline
 Reporting-DB & Denormalisiert & Schnelle Abfragen \\
 \hline
-Stammdaten & 3NF/BCNF & Wenig Aenderungen \\
+Stammdaten & 3NF/BCNF & Wenig Änderungen \\
 \hline
-Bewegungsdaten & 3NF & Viele Aenderungen \\
+Bewegungsdaten & 3NF & Viele Änderungen \\
 \hline
 \end{tabular}
 \end{center}
@@ -1456,7 +1456,7 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \vfill
 \begin{center}
 {\Huge\color{IMSOrange} Hands-on}\\[1em]
-{\Large 3NF-Normalisierung durchfuehren}\\[2em]
+{\Large 3NF-Normalisierung durchführen}\\[2em]
 {\large\ttfamily marimo: 08-normalisierung.py}\\[1em]
 {\normalsize Aufgaben 8.4 -- 8.5}
 \end{center}
@@ -1470,7 +1470,7 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \begin{frame}{Zusammenfassung}
 \begin{columns}[T]
 \column{0.5\textwidth}
-\textbf{Funktionale Abhaengigkeit:}
+\textbf{Funktionale Abhängigkeit:}
 \begin{itemize}
     \item \fd{A}{B} = A bestimmt B
     \item Voll vs. partiell
@@ -1481,15 +1481,15 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \textbf{Normalformen:}
 \begin{itemize}
     \item 1NF: Atomare Werte
-    \item 2NF: Keine partiellen Abhaengigkeiten
-    \item 3NF: Keine transitiven Abhaengigkeiten
+    \item 2NF: Keine partiellen Abhängigkeiten
+    \item 3NF: Keine transitiven Abhängigkeiten
 \end{itemize}
 
 \column{0.5\textwidth}
 \textbf{Normalisierungsalgorithmus:}
 \begin{enumerate}
     \item FDs identifizieren
-    \item Schluessel bestimmen
+    \item Schlüssel bestimmen
     \item Verletzungen finden
     \item Tabelle zerlegen
     \item Wiederholen bis 3NF
@@ -1498,9 +1498,9 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \vspace{1em}
 \textbf{Denormalisierung:}
 \begin{itemize}
-    \item Bewusst Redundanz einfuehren
-    \item Fuer Performance
-    \item Nach Abwaegung!
+    \item Bewusst Redundanz einführen
+    \item Für Performance
+    \item Nach Abwägung!
 \end{itemize}
 \end{columns}
 \end{frame}
@@ -1510,7 +1510,7 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \begin{tikzpicture}[node distance=1.2cm, scale=0.9, every node/.style={scale=0.9}]
     \node[roadmapbox, minimum width=6cm] (start) {Ausgangstabelle};
     \node[roadmapbox, minimum width=6cm, below=of start] (fd) {1. FDs identifizieren};
-    \node[roadmapbox, minimum width=6cm, below=of fd] (key) {2. Schluessel bestimmen};
+    \node[roadmapbox, minimum width=6cm, below=of fd] (key) {2. Schlüssel bestimmen};
     \node[roadmapbox, minimum width=6cm, below=of key, fill=IMSOrange!10, draw=IMSOrange] (check) {3. NF-Verletzung?};
     \node[roadmapbox, minimum width=6cm, below=of check] (split) {4. Zerlegen};
     \node[roadmapbox, minimum width=6cm, fill=green!20, draw=green!50!black, below=of split] (done) {3NF erreicht!};
@@ -1531,15 +1531,15 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \begin{tabular}{|p{1.5cm}|p{4cm}|p{4cm}|p{3cm}|}
 \hline
 \rowcolor{IMSBlue!20}
-\textbf{NF} & \textbf{Anforderung} & \textbf{Prueffrage} & \textbf{Loesung} \\
+\textbf{NF} & \textbf{Anforderung} & \textbf{Prüffrage} & \textbf{Lösung} \\
 \hline
 \textbf{1NF} & Atomare Werte & Listen in Zellen? Wiederholungsgruppen? & Aufteilen in Zeilen/Tabellen \\
 \hline
-\textbf{2NF} & Voll abhaengig vom PK & Haengt Attribut von Teil des Schluessels ab? & Teil-FD auslagern \\
+\textbf{2NF} & Voll abhängig vom PK & Hängt Attribut von Teil des Schlüssels ab? & Teil-FD auslagern \\
 \hline
-\textbf{3NF} & Keine transitive FD & FD zwischen Nicht-Schluessel-Attributen? & Transitive FD auslagern \\
+\textbf{3NF} & Keine transitive FD & FD zwischen Nicht-Schlüssel-Attributen? & Transitive FD auslagern \\
 \hline
-\textbf{BCNF} & Determinante = Superschluessel & Determinante kein Schluessel? & Auslagern \\
+\textbf{BCNF} & Determinante = Superschlüssel & Determinante kein Schlüssel? & Auslagern \\
 \hline
 \end{tabular}
 \end{center}
@@ -1547,16 +1547,16 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \vspace{1em}
 \textbf{Merksatz (Codd):}
 \begin{quote}
-``Jedes Attribut haengt ab vom Schluessel, vom ganzen Schluessel, und von nichts ausser dem Schluessel -- so wahr mir Codd helfe!''
+``Jedes Attribut hängt ab vom Schlüssel, vom ganzen Schlüssel, und von nichts ausser dem Schlüssel -- so wahr mir Codd helfe!''
 \end{quote}
 \end{frame}
 
-\begin{frame}{Ausblick: Naechste Session}
+\begin{frame}{Ausblick: Nächste Session}
 \textbf{Vorlesung 9: Joins}
 
 \vspace{1em}
 \begin{itemize}
-    \item Daten aus mehreren Tabellen verknuepfen
+    \item Daten aus mehreren Tabellen verknüpfen
     \item INNER JOIN, LEFT JOIN, RIGHT JOIN
     \item Self-Joins
     \item Join-Performance
@@ -1572,7 +1572,7 @@ Bewegungsdaten & 3NF & Viele Aenderungen \\
 \end{center}
 
 \vspace{1em}
-\textbf{Jetzt haben wir gute Tabellen -- in Session 9 lernen wir, sie wieder zusammenzufuehren!}
+\textbf{Jetzt haben wir gute Tabellen -- in Vorlesung 9 lernen wir, sie wieder zusammenzuführen!}
 \end{frame}
 
 \begin{frame}[plain]
